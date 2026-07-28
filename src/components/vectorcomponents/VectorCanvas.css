@@ -1,0 +1,15 @@
+.vector-canvas {
+  width: 100%;
+  line-height: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.vector-canvas:active {
+  cursor: grabbing;
+}
+
+.vector-canvas canvas {
+  display: block;
+}

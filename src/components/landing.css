@@ -1,0 +1,114 @@
+.landing {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--ink);
+}
+
+.landing-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(circle at 50% 40%, black 0%, transparent 72%);
+}
+
+.landing-vectors {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(70vw, 640px);
+  height: min(70vw, 640px);
+  transform: translate(-50%, -54%);
+  opacity: 0.9;
+}
+
+.vec-line {
+  stroke-width: 1.4;
+}
+
+.vec-line.vec-a,
+.vec-head.vec-a {
+  stroke: var(--vec-a);
+  fill: var(--vec-a);
+}
+
+.vec-line.vec-b,
+.vec-head.vec-b {
+  stroke: var(--vec-b);
+  fill: var(--vec-b);
+}
+
+.vec-arc {
+  stroke: var(--accent);
+  stroke-width: 1.2;
+}
+
+.landing-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 32px;
+  max-width: 560px;
+}
+
+.landing-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 14px;
+}
+
+.landing-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(2.8rem, 8vw, 4.6rem);
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin: 0;
+}
+
+.landing-title-2 {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(2.8rem, 8vw, 4.6rem);
+  letter-spacing: -0.02em;
+  color: var(--vec-b);
+  margin: 0;
+}
+
+.landing-tagline {
+  font-size: 1.05rem;
+  color: var(--text-dim);
+  margin: 18px auto 36px;
+  max-width: 420px;
+  line-height: 1.55;
+}
+
+.landing-start {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1rem;
+  color: white;
+  background: var(--accent);
+  border: none;
+  border-radius: 999px;
+  padding: 14px 40px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.landing-start:hover {
+  transform: translateY(-3px);
+}
+
+.landing-start:active {
+  transform: translateY(0);
+}

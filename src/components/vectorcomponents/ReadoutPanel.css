@@ -1,0 +1,70 @@
+.readout-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.readout-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 4px;
+}
+
+.formula {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--text);
+  margin: 4px 0;
+}
+
+.formula-sub {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  margin-top: -2px;
+}
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-top: 1px solid var(--line);
+  padding: 8px 0;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.result-row strong {
+  font-family: var(--font-mono);
+  color: var(--result);
+  font-size: 1rem;
+}
+
+.note {
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin: 10px 0 0;
+}
+
+.note em {
+  color: var(--text);
+  font-style: italic;
+}
+
+.magnitudes {
+  margin-top: 8px;
+  border-top: 1px dashed var(--line);
+  padding-top: 4px;
+}
+
+.result-row.is-highlighted {
+  color: var(--text);
+}
+
+.result-row.is-highlighted strong {
+  color: var(--accent);
+}
