@@ -18,10 +18,6 @@ const UNIT = 42;
 const HANDLE_R = 8;
 const HIT_R = 16;
 
-// vecA / vecB look like { tail: {x,y,z}, head: {x,y,z} }. The actual
-// vector — the thing every calculation cares about — is head minus tail.
-// z is real and used in every formula; it's just never drawn on this
-// flat canvas (the canvas shows the x-y projection).
 function components(v) {
   return {
     x: v.head.x - v.tail.x,
@@ -176,8 +172,6 @@ export default function VectorCanvas({
         };
         const { vecA, vecB, setVecA, setVecB } = stateRef.current;
 
-        // Dragging only ever touches x/y — z is preserved from whatever
-        // it already was, since depth has no on-canvas handle.
         if (dragging === "a-tail") {
           setVecA({ ...vecA, tail: { ...snapped, z: vecA.tail.z || 0 } });
         } else if (dragging === "a-head") {
@@ -239,7 +233,7 @@ function drawVectorArrow(p, ox, oy, tip, colorHex, label) {
   p.push();
   p.noStroke();
   p.fill(colorHex);
-  p.textFont("Caveat, cursive");
+  p.textFont("Open Sans, Bold");
   p.textSize(26);
   const offX = tip.x >= ox ? 14 : -26;
   const offY = tip.y <= oy ? -8 : 22;
@@ -323,7 +317,6 @@ function drawCrossMode(p, vecA, vecB, aS, bS, ox, oy, colors, crossShape) {
   p.strokeWeight(1.5);
   p.beginShape();
   if (crossShape === "triangle") {
-    // Triangle O, A, B — exactly half the parallelogram's area.
     p.vertex(ox, oy);
     p.vertex(aS.x, aS.y);
     p.vertex(bS.x, bS.y);
@@ -335,9 +328,6 @@ function drawCrossMode(p, vecA, vecB, aS, bS, ox, oy, colors, crossShape) {
   }
   p.endShape(p.CLOSE);
   p.pop();
-
-  // rotational sense indicator (only strictly meaningful when both
-  // vectors lie flat in the canvas plane, i.e. z = 0 for both)
   p.push();
   p.noFill();
   p.stroke(shapeColor);

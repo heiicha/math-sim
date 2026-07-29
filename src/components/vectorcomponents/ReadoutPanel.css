@@ -5,8 +5,9 @@
 }
 
 .readout-eyebrow {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--accent);
@@ -39,7 +40,7 @@
 
 .result-row strong {
   font-family: var(--font-mono);
-  color: var(--result);
+  color: var(--accent);
   font-size: 1rem;
 }
 

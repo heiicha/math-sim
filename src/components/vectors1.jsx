@@ -15,11 +15,11 @@ export const MODES = {
   },
   addition: {
     label: "Addition",
-    tagline: "Tip-to-tail: walk a, then walk b",
+    tagline: "Either tip-to-tail or will form the diagonal of a parallelogram",
   },
   projection: {
     label: "Projection",
-    tagline: "The shadow a casts onto b, and what's left over",
+    tagline: "The shadow a casts onto b",
   },
   ratio: {
     label: "Ratio Theorem",
@@ -75,7 +75,7 @@ function Vectors1() {
             ratio={ratio}
           />
           <p className="canvas-hint">
-            Input coordinates in x y z format on the left or drag arrow/circles.
+            Input coordinates in x y z format on the left or drag arrow/circles. All vectors here are position vectors. (i.e <b>a</b> = OA)
           </p>
         </section>
 
