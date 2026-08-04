@@ -1,0 +1,83 @@
+.topic-select {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0A243F;
+  padding: 32px;
+}
+
+.topic-select-content {
+  text-align: center;
+  max-width: 720px;
+}
+
+.topic-select-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: white;
+  margin: 0 0 14px;
+  background-color: var(--accent);
+  border-radius: 50px;
+  padding: 0.5rem 1rem;
+  display: inline-block;
+}
+
+.topic-select-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(2.2rem, 6vw, 3.4rem);
+  letter-spacing: -0.02em;
+  color: white;
+  margin: 0 0 40px;
+}
+
+.topic-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  justify-content: center;
+}
+
+.topic-card {
+  flex: 1;
+  min-width: 240px;
+  max-width: 320px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid var(--topic-color);
+  border-radius: 16px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.topic-card:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.topic-card:active {
+  transform: translateY(0);
+}
+
+.topic-card-label {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.4rem;
+  color: var(--topic-color);
+}
+
+.topic-card-desc {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+}

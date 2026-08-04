@@ -1,10 +1,9 @@
-import { MODE_GROUPS } from "../vectors2";
+import NumberLineInput from "../vectorcomponents/NumberLineInput";
 import "../vectorcomponents/ControlPanel.css";
 import "./ControlPanel3D.css";
 
 function ColumnInput({ label, color, vector, onChange }) {
-  const update = (key) => (e) => {
-    const value = parseFloat(e.target.value);
+  const update = (key, value) => {
     onChange({ ...vector, [key]: Number.isNaN(value) ? 0 : value });
   };
   return (
@@ -15,15 +14,22 @@ function ColumnInput({ label, color, vector, onChange }) {
       <div className="bracket-pair">
         <div className="bracket bracket-left" style={{ borderColor: color }} />
         <div className="bracket-values">
-          <input type="number" value={vector.x} onChange={update("x")} step="0.5" aria-label={`${label} x`} />
-          <input type="number" value={vector.y} onChange={update("y")} step="0.5" aria-label={`${label} y`} />
-          <input
-            type="number"
-            value={vector.z || 0}
-            onChange={update("z")}
-            step="0.5"
-            aria-label={`${label} z`}
-          />
+          {["x", "y", "z"].map((key) => (
+            <div className="axis-row" key={key}>
+              <input
+                type="number"
+                value={vector[key] || 0}
+                onChange={(e) => update(key, parseFloat(e.target.value))}
+                step="0.5"
+                aria-label={`${label} ${key}`}
+              />
+              <NumberLineInput
+                value={vector[key] || 0}
+                onChange={(v) => update(key, v)}
+                color={color}
+              />
+            </div>
+          ))}
         </div>
         <div className="bracket bracket-right" style={{ borderColor: color }} />
       </div>
@@ -53,6 +59,25 @@ function LineInputs({ label, color, line, onChange }) {
   );
 }
 
+function ShowToggle({ options, value, onChange }) {
+  return (
+    <div className="shape-toggle">
+      <p className="shape-toggle-label">Show</p>
+      <div className="shape-toggle-buttons">
+        {options.map((opt) => (
+          <button
+            key={opt.key}
+            className={value === opt.key ? "is-active" : ""}
+            onClick={() => onChange(opt.key)}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function PlaneInputs({ label, color, plane, onChange }) {
   return (
     <div className="entity-group">
@@ -77,7 +102,6 @@ function PlaneInputs({ label, color, plane, onChange }) {
 
 export default function ControlPanel3D({
   mode,
-  setMode,
   line1,
   setLine1,
   line2,
@@ -88,31 +112,13 @@ export default function ControlPanel3D({
   setPlane2,
   planePlaneView,
   setPlanePlaneView,
-  reflectPoint,
-  setReflectPoint,
+  linePlaneView,
+  setLinePlaneView,
+  lineLineView,
+  setLineLineView,
 }) {
   return (
     <aside className="panel control-panel">
-      <nav className="mode-tabs-grouped" aria-label="Concept">
-        {MODE_GROUPS.map((group) => (
-          <div key={group.title} className="mode-group">
-            <p className="mode-group-title">{group.title}</p>
-            <div className="mode-tabs">
-              {group.items.map((item) => (
-                <button
-                  key={item.key}
-                  className={`mode-tab ${mode === item.key ? "is-active" : ""}`}
-                  onClick={() => setMode(item.key)}
-                  aria-pressed={mode === item.key}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
-      </nav>
-
       <div className="entity-inputs">
         {mode === "lineForms" && (
           <LineInputs label="Line" color="var(--vec-a)" line={line1} onChange={setLine1} />
@@ -126,6 +132,15 @@ export default function ControlPanel3D({
           <>
             <LineInputs label="Line" color="var(--vec-a)" line={line1} onChange={setLine1} />
             <PlaneInputs label="Plane" color="var(--vec-b)" plane={plane1} onChange={setPlane1} />
+
+            <ShowToggle
+              value={linePlaneView}
+              onChange={setLinePlaneView}
+              options={[
+                { key: "relationship", label: "Relationship" },
+                { key: "reflection", label: "Reflection" },
+              ]}
+            />
           </>
         )}
 
@@ -133,6 +148,16 @@ export default function ControlPanel3D({
           <>
             <LineInputs label="Line 1" color="var(--vec-a)" line={line1} onChange={setLine1} />
             <LineInputs label="Line 2" color="var(--vec-b)" line={line2} onChange={setLine2} />
+
+            <ShowToggle
+              value={lineLineView}
+              onChange={setLineLineView}
+              options={[
+                { key: "relationship", label: "Relationship" },
+                { key: "addition", label: "Addition" },
+                { key: "cross", label: "Cross Product" },
+              ]}
+            />
           </>
         )}
 
@@ -141,38 +166,15 @@ export default function ControlPanel3D({
             <PlaneInputs label="Plane 1" color="var(--vec-a)" plane={plane1} onChange={setPlane1} />
             <PlaneInputs label="Plane 2" color="var(--vec-b)" plane={plane2} onChange={setPlane2} />
 
-            <div className="shape-toggle">
-              <p className="shape-toggle-label">Show</p>
-              <div className="shape-toggle-buttons">
-                <button
-                  className={planePlaneView === "angle" ? "is-active" : ""}
-                  onClick={() => setPlanePlaneView("angle")}
-                >
-                  Angle
-                </button>
-                <button
-                  className={planePlaneView === "distance" ? "is-active" : ""}
-                  onClick={() => setPlanePlaneView("distance")}
-                >
-                  Distance
-                </button>
-                <button
-                  className={planePlaneView === "reflection" ? "is-active" : ""}
-                  onClick={() => setPlanePlaneView("reflection")}
-                >
-                  Reflection
-                </button>
-              </div>
-            </div>
-
-            {planePlaneView === "reflection" && (
-              <div className="entity-group">
-                <p className="entity-title" style={{ color: "var(--result)" }}>
-                  Point to reflect (across Plane 1)
-                </p>
-                <ColumnInput label="Q" color="var(--result)" vector={reflectPoint} onChange={setReflectPoint} />
-              </div>
-            )}
+            <ShowToggle
+              value={planePlaneView}
+              onChange={setPlanePlaneView}
+              options={[
+                { key: "angle", label: "Angle" },
+                { key: "distance", label: "Distance" },
+                { key: "reflection", label: "Reflection" },
+              ]}
+            />
           </>
         )}
       </div>

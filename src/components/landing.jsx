@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import FeedbackButton from "./feedback";
 import "./landing.css";
 
 export default function LandingPage() {
@@ -30,13 +29,10 @@ export default function LandingPage() {
         <p className="landing-tagline">
           An open-source math project 
         </p>
-        <button className="landing-start" onClick={() => navigate("/vectors1")}>
+        <button className="landing-start" onClick={() => navigate("/topics")}>
           START
         </button>
       </main>
-      <div className="feedback-container"> 
-        <FeedbackButton/> 
-      </div>
     </div>
   );
 }

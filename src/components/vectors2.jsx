@@ -24,7 +24,7 @@ export const MODE_GROUPS = [
       {
         key: "lineLine",
         label: "Line & Line",
-        tagline: "Intersecting, parallel, or skew",
+        tagline: "Intersecting, parallel, or skew — or add/cross their direction vectors",
       },
       {
         key: "planePlane",
@@ -47,7 +47,8 @@ function Vectors2() {
   const [plane2, setPlane2] = useState({ point: { x: 0, y: 0, z: 0 }, normal: { x: 1, y: 1, z: 0 } });
 
   const [planePlaneView, setPlanePlaneView] = useState("angle"); // "angle" | "distance" | "reflection"
-  const [reflectPoint, setReflectPoint] = useState({ x: 3, y: 2, z: 6 });
+  const [linePlaneView, setLinePlaneView] = useState("relationship"); // "relationship" | "reflection"
+  const [lineLineView, setLineLineView] = useState("relationship"); // "relationship" | "addition" | "cross"
 
   return (
     <div className="app-shell">
@@ -61,42 +62,71 @@ function Vectors2() {
       </header>
 
       <main className="layout">
-        <ControlPanel3D
-          mode={mode}
-          setMode={setMode}
-          line1={line1}
-          setLine1={setLine1}
-          line2={line2}
-          setLine2={setLine2}
-          plane1={plane1}
-          setPlane1={setPlane1}
-          plane2={plane2}
-          setPlane2={setPlane2}
-          planePlaneView={planePlaneView}
-          setPlanePlaneView={setPlanePlaneView}
-          reflectPoint={reflectPoint}
-          setReflectPoint={setReflectPoint}
-        />
-
-        <section className="canvas-panel">
-          <Scene3D
+        <div className="main-row">
+          <ControlPanel3D
             mode={mode}
             line1={line1}
+            setLine1={setLine1}
             line2={line2}
+            setLine2={setLine2}
             plane1={plane1}
+            setPlane1={setPlane1}
             plane2={plane2}
+            setPlane2={setPlane2}
             planePlaneView={planePlaneView}
-            reflectPoint={reflectPoint}
+            setPlanePlaneView={setPlanePlaneView}
+            linePlaneView={linePlaneView}
+            setLinePlaneView={setLinePlaneView}
+            lineLineView={lineLineView}
+            setLineLineView={setLineLineView}
           />
-          <p className="canvas-hint">
-            Drag to orbit, scroll to zoom. z is drawn as height here; edit x, y, z on the left —
-            entity 1 is always {" "}
-            <span style={{ color: "var(--vec-a)", fontWeight: 600 }}>this color</span>, entity 2 is{" "}
-            <span style={{ color: "var(--vec-b)", fontWeight: 600 }}>this color</span>, and
-            anything computed (intersections, distances) is{" "}
-            <span style={{ color: "var(--result)", fontWeight: 600 }}>this color</span>.
-          </p>
-        </section>
+
+          <section className="canvas-panel">
+            <Scene3D
+              mode={mode}
+              line1={line1}
+              setLine1={setLine1}
+              line2={line2}
+              setLine2={setLine2}
+              plane1={plane1}
+              setPlane1={setPlane1}
+              plane2={plane2}
+              setPlane2={setPlane2}
+              planePlaneView={planePlaneView}
+              linePlaneView={linePlaneView}
+              lineLineView={lineLineView}
+            />
+            <p className="canvas-hint">
+              Drag empty space to orbit, scroll to zoom, or drag a point/arrow tip to edit it directly.
+              z is drawn as height here; edit x, y, z below —
+              entity 1 is always {" "}
+              <span style={{ color: "var(--vec-a)", fontWeight: 600 }}>this color</span>, entity 2 is{" "}
+              <span style={{ color: "var(--vec-b)", fontWeight: 600 }}>this color</span>, and
+              anything computed (intersections, distances) is{" "}
+              <span style={{ color: "var(--result)", fontWeight: 600 }}>this color</span>.
+            </p>
+          </section>
+        </div>
+
+        <nav className="panel mode-bar" aria-label="Concept">
+          {MODE_GROUPS.map((group) => (
+            <div key={group.title} className="mode-group">
+              <p className="mode-group-title">{group.title}</p>
+              <div className="mode-tabs">
+                {group.items.map((item) => (
+                  <button
+                    key={item.key}
+                    className={`mode-tab ${mode === item.key ? "is-active" : ""}`}
+                    onClick={() => setMode(item.key)}
+                    aria-pressed={mode === item.key}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </nav>
 
         <ReadoutPanel3D
           mode={mode}
@@ -105,7 +135,8 @@ function Vectors2() {
           plane1={plane1}
           plane2={plane2}
           planePlaneView={planePlaneView}
-          reflectPoint={reflectPoint}
+          linePlaneView={linePlaneView}
+          lineLineView={lineLineView}
         />
       </main>
     </div>

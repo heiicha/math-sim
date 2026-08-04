@@ -17,6 +17,17 @@ import "./VectorCanvas.css";
 const UNIT = 42;
 const HANDLE_R = 8;
 const HIT_R = 16;
+const LINE_HIT_R = 8;
+
+function distToSegment(px, py, x1, y1, x2, y2) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq < 1e-9) return Math.hypot(px - x1, py - y1);
+  let t = ((px - x1) * dx + (py - y1) * dy) / lenSq;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+}
 
 function components(v) {
   return {
@@ -59,11 +70,15 @@ export default function VectorCanvas({
   useEffect(() => {
     const container = containerRef.current;
     let dragging = null;
+    let lineDragStart = null;
+    let panning = false;
+    let panStart = null;
+    let pan = { x: 0, y: 0 };
     let colors = readColors();
     let p5Instance;
 
     const sketch = (p) => {
-      const getOrigin = () => ({ x: p.width / 2, y: p.height / 2 });
+      const getOrigin = () => ({ x: p.width / 2 + pan.x, y: p.height / 2 + pan.y });
       const toScreen = (v, origin) => ({
         x: origin.x + v.x * UNIT,
         y: origin.y - v.y * UNIT,
@@ -159,32 +174,104 @@ export default function VectorCanvas({
             closestDist = d;
           }
         }
-        dragging = closest;
+
+        if (closest) {
+          dragging = closest;
+          return;
+        }
+
+        const aTailS = toScreen(vecA.tail, origin);
+        const aHeadS = toScreen(vecA.head, origin);
+        const bTailS = toScreen(vecB.tail, origin);
+        const bHeadS = toScreen(vecB.head, origin);
+        const distA = distToSegment(p.mouseX, p.mouseY, aTailS.x, aTailS.y, aHeadS.x, aHeadS.y);
+        const distB = distToSegment(p.mouseX, p.mouseY, bTailS.x, bTailS.y, bHeadS.x, bHeadS.y);
+        if (distA <= LINE_HIT_R || distB <= LINE_HIT_R) {
+          const key = distA <= distB ? "a-line" : "b-line";
+          const vec = key === "a-line" ? vecA : vecB;
+          dragging = key;
+          lineDragStart = {
+            startWorld: toWorld(p.mouseX, p.mouseY, origin),
+            origTail: { ...vec.tail },
+            origHead: { ...vec.head },
+          };
+          return;
+        }
+
+        panning = true;
+        panStart = { x: p.mouseX, y: p.mouseY, panX: pan.x, panY: pan.y };
       };
 
       p.mouseDragged = () => {
-        if (!dragging) return;
-        const origin = getOrigin();
-        const world = toWorld(p.mouseX, p.mouseY, origin);
-        const snapped = {
-          x: Math.round(world.x * 5) / 5,
-          y: Math.round(world.y * 5) / 5,
-        };
-        const { vecA, vecB, setVecA, setVecB } = stateRef.current;
+        if (dragging === "a-line" || dragging === "b-line") {
+          const origin = getOrigin();
+          const worldNow = toWorld(p.mouseX, p.mouseY, origin);
+          const delta = {
+            x: worldNow.x - lineDragStart.startWorld.x,
+            y: worldNow.y - lineDragStart.startWorld.y,
+          };
+          const rawTail = {
+            x: lineDragStart.origTail.x + delta.x,
+            y: lineDragStart.origTail.y + delta.y,
+          };
+          const snappedTail = {
+            x: Math.round(rawTail.x * 5) / 5,
+            y: Math.round(rawTail.y * 5) / 5,
+          };
+          // apply the same (snapped) delta to the head so the vector's
+          // shape (its component values) never drifts while translating
+          const actualDelta = {
+            x: snappedTail.x - lineDragStart.origTail.x,
+            y: snappedTail.y - lineDragStart.origTail.y,
+          };
+          const newHead = {
+            x: lineDragStart.origHead.x + actualDelta.x,
+            y: lineDragStart.origHead.y + actualDelta.y,
+          };
+          const { vecA, vecB, setVecA, setVecB } = stateRef.current;
+          if (dragging === "a-line") {
+            setVecA({ tail: { ...snappedTail, z: vecA.tail.z || 0 }, head: { ...newHead, z: vecA.head.z || 0 } });
+          } else {
+            setVecB({ tail: { ...snappedTail, z: vecB.tail.z || 0 }, head: { ...newHead, z: vecB.head.z || 0 } });
+          }
+          return;
+        }
+        if (dragging) {
+          const origin = getOrigin();
+          const world = toWorld(p.mouseX, p.mouseY, origin);
+          const snapped = {
+            x: Math.round(world.x * 5) / 5,
+            y: Math.round(world.y * 5) / 5,
+          };
+          const { vecA, vecB, setVecA, setVecB } = stateRef.current;
 
-        if (dragging === "a-tail") {
-          setVecA({ ...vecA, tail: { ...snapped, z: vecA.tail.z || 0 } });
-        } else if (dragging === "a-head") {
-          setVecA({ ...vecA, head: { ...snapped, z: vecA.head.z || 0 } });
-        } else if (dragging === "b-tail") {
-          setVecB({ ...vecB, tail: { ...snapped, z: vecB.tail.z || 0 } });
-        } else if (dragging === "b-head") {
-          setVecB({ ...vecB, head: { ...snapped, z: vecB.head.z || 0 } });
+          if (dragging === "a-tail") {
+            setVecA({ ...vecA, tail: { ...snapped, z: vecA.tail.z || 0 } });
+          } else if (dragging === "a-head") {
+            setVecA({ ...vecA, head: { ...snapped, z: vecA.head.z || 0 } });
+          } else if (dragging === "b-tail") {
+            setVecB({ ...vecB, tail: { ...snapped, z: vecB.tail.z || 0 } });
+          } else if (dragging === "b-head") {
+            setVecB({ ...vecB, head: { ...snapped, z: vecB.head.z || 0 } });
+          }
+          return;
+        }
+        if (panning) {
+          pan.x = panStart.panX + (p.mouseX - panStart.x);
+          pan.y = panStart.panY + (p.mouseY - panStart.y);
         }
       };
 
       p.mouseReleased = () => {
         dragging = null;
+        lineDragStart = null;
+        panning = false;
+        panStart = null;
+      };
+
+      p.doubleClicked = () => {
+        pan.x = 0;
+        pan.y = 0;
       };
     };
 
@@ -453,6 +540,10 @@ function drawRatioMode(p, pointA, pointB, aS, bS, origin, ratio, colors) {
   p.strokeWeight(2);
   p.line(aS.x, aS.y, bS.x, bS.y);
   p.pop();
+
+  // P's position vector OP — dashed, so it reads as "derived" the same way
+  // the other modes dash their computed/helper vectors
+  drawDashedLine(p, { x: origin.x, y: origin.y }, pS, colors.result, 5);
 
   p.push();
   p.noStroke();

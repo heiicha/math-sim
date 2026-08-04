@@ -1,4 +1,4 @@
-import { MODES } from "../vectors1";
+import NumberLineInput from "./NumberLineInput";
 import "./ControlPanel.css";
 
 // The number boxes edit the vector's *components* (head - tail), not raw
@@ -12,8 +12,7 @@ function ColumnVectorInput({ label, color, vector, onChange }) {
     z: (vector.head.z || 0) - (vector.tail.z || 0),
   };
 
-  const update = (key) => (e) => {
-    const value = parseFloat(e.target.value);
+  const update = (key, value) => {
     const nextComp = { ...comp, [key]: Number.isNaN(value) ? 0 : value };
     onChange({
       ...vector,
@@ -33,27 +32,22 @@ function ColumnVectorInput({ label, color, vector, onChange }) {
       <div className="bracket-pair">
         <div className="bracket bracket-left" style={{ borderColor: color }} />
         <div className="bracket-values">
-          <input
-            type="number"
-            value={comp.x}
-            onChange={update("x")}
-            step="0.5"
-            aria-label={`${label} x component`}
-          />
-          <input
-            type="number"
-            value={comp.y}
-            onChange={update("y")}
-            step="0.5"
-            aria-label={`${label} y component`}
-          />
-          <input
-            type="number"
-            value={comp.z}
-            onChange={update("z")}
-            step="0.5"
-            aria-label={`${label} z component`}
-          />
+          {["x", "y", "z"].map((key) => (
+            <div className="axis-row" key={key}>
+              <input
+                type="number"
+                value={comp[key]}
+                onChange={(e) => update(key, parseFloat(e.target.value))}
+                step="0.5"
+                aria-label={`${label} ${key} component`}
+              />
+              <NumberLineInput
+                value={comp[key]}
+                onChange={(v) => update(key, v)}
+                color={color}
+              />
+            </div>
+          ))}
         </div>
         <div className="bracket bracket-right" style={{ borderColor: color }} />
       </div>
@@ -105,7 +99,6 @@ function RatioInputs({ ratio, setRatio }) {
 
 export default function ControlPanel({
   mode,
-  setMode,
   vecA,
   setVecA,
   vecB,
@@ -117,19 +110,6 @@ export default function ControlPanel({
 }) {
   return (
     <aside className="panel control-panel">
-      <nav className="mode-tabs" aria-label="Vector operation">
-        {Object.entries(MODES).map(([key, m]) => (
-          <button
-            key={key}
-            className={`mode-tab ${mode === key ? "is-active" : ""}`}
-            onClick={() => setMode(key)}
-            aria-pressed={mode === key}
-          >
-            {m.label}
-          </button>
-        ))}
-      </nav>
-
       <div className="vector-inputs">
         <ColumnVectorInput label="a" color="var(--vec-a)" vector={vecA} onChange={setVecA} />
         <ColumnVectorInput label="b" color="var(--vec-b)" vector={vecB} onChange={setVecB} />

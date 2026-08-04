@@ -55,33 +55,47 @@ function Vectors1() {
       </header>
 
       <main className="layout">
-        <ControlPanel
-          mode={mode}
-          setMode={setMode}
-          vecA={vecA}
-          setVecA={setVecA}
-          vecB={vecB}
-          setVecB={setVecB}
-          crossShape={crossShape}
-          setCrossShape={setCrossShape}
-          ratio={ratio}
-          setRatio={setRatio}
-        />
-
-        <section className="canvas-panel">
-          <VectorCanvas
+        <div className="main-row">
+          <ControlPanel
             mode={mode}
             vecA={vecA}
             setVecA={setVecA}
             vecB={vecB}
             setVecB={setVecB}
             crossShape={crossShape}
+            setCrossShape={setCrossShape}
             ratio={ratio}
+            setRatio={setRatio}
           />
-          <p className="canvas-hint">
-            Input coordinates in x y z format on the left or drag arrow/circles. All vectors here are position vectors. (i.e <b>a</b> = OA)
-          </p>
-        </section>
+
+          <section className="canvas-panel">
+            <VectorCanvas
+              mode={mode}
+              vecA={vecA}
+              setVecA={setVecA}
+              vecB={vecB}
+              setVecB={setVecB}
+              crossShape={crossShape}
+              ratio={ratio}
+            />
+            <p className="canvas-hint">
+              Input coordinates below or drag the arrows/circles. All vectors here are position vectors. (i.e <b>a</b> = OA)
+            </p>
+          </section>
+        </div>
+
+        <nav className="panel mode-bar" aria-label="Vector operation">
+          {Object.entries(MODES).map(([key, m]) => (
+            <button
+              key={key}
+              className={`mode-tab ${mode === key ? "is-active" : ""}`}
+              onClick={() => setMode(key)}
+              aria-pressed={mode === key}
+            >
+              {m.label}
+            </button>
+          ))}
+        </nav>
 
         <section className="readout-panel">
           <ReadoutPanel

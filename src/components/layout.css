@@ -1,0 +1,99 @@
+.app-shell {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px 32px 80px;
+}
+
+.app-header {
+  margin-bottom: 40px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 10px;
+}
+
+.app-header h1 {
+  font-family: "Open Sans", sans-serif;
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  font-weight: 700;
+}
+
+.app-header .topic-header {
+  font-family: "Noto Sans", sans-serif;
+  font-weight: 900;
+  color: white;
+  background: linear-gradient(to right, #183570, #7D9EE5);
+  padding: 1rem;
+}
+
+.tagline {
+  font-size: 1.05rem;
+  color: var(--text-dim);
+  margin: 10px 0 0;
+}
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.main-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 22px;
+}
+
+.canvas-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px;
+  border-left: 3px solid var(--margin-rule);
+  flex: 1;
+  min-width: 280px;
+}
+
+.mode-bar {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.canvas-hint {
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  color: var(--text-dim);
+  text-align: center;
+  margin: 6px 0 0;
+}
+
+.page-nav-link {
+  display: inline-block;
+  margin-top: 14px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s ease;
+}
+
+.page-nav-link:hover {
+  border-bottom-color: var(--accent);
+}

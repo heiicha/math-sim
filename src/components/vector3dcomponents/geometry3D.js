@@ -42,6 +42,32 @@ export function reflectPointAcrossPlane(point, plane) {
   return subtract(point, scale(plane.normal, s));
 }
 
+// Reflects a free vector (no position, e.g. a direction or normal) across a
+// plane's normal — same formula as reflectPointAcrossPlane but without the
+// point-plane.point translation, since a direction has no position to
+// measure that offset from.
+export function reflectVectorAcrossPlane(v, plane) {
+  const n = plane.normal;
+  const nMagSq = dot(n, n);
+  if (nMagSq < EPS) return v;
+  const s = (2 * dot(v, n)) / nMagSq;
+  return subtract(v, scale(n, s));
+}
+
+export function reflectLineAcrossPlane(line, mirror) {
+  return {
+    point: reflectPointAcrossPlane(line.point, mirror),
+    direction: reflectVectorAcrossPlane(line.direction, mirror),
+  };
+}
+
+export function reflectPlaneAcrossPlane(plane, mirror) {
+  return {
+    point: reflectPointAcrossPlane(plane.point, mirror),
+    normal: reflectVectorAcrossPlane(plane.normal, mirror),
+  };
+}
+
 // ---- Line & Plane -------------------------------------------------------
 
 export function linePlaneRelationship(line, plane) {
@@ -104,6 +130,29 @@ export function lineLineRelationship(line1, line2) {
 
   const distance = Math.abs(scalarTriple) / crossMag;
   return { type: "skew", angleDeg, distance, commonPerpendicular: normalize(cross) };
+}
+
+// The two points — one on each line — where the shortest connecting
+// segment between two skew lines meets them. Returns null if the lines
+// aren't actually skew (parallel directions have no unique closest pair).
+export function closestPointsOnSkewLines(line1, line2) {
+  const d1 = line1.direction;
+  const d2 = line2.direction;
+  const w0 = subtract(line1.point, line2.point);
+  const a = dot(d1, d1);
+  const b = dot(d1, d2);
+  const c = dot(d2, d2);
+  const dVal = dot(d1, w0);
+  const e = dot(d2, w0);
+  const denom = a * c - b * b;
+  if (Math.abs(denom) < EPS) return null;
+
+  const s = (b * e - c * dVal) / denom;
+  const t = (a * e - b * dVal) / denom;
+  return {
+    P1: pointOnLine(line1, s),
+    P2: pointOnLine(line2, t),
+  };
 }
 
 // ---- Plane & Plane ----------------------------------------------------------
