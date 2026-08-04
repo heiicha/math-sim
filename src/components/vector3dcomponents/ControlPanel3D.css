@@ -1,0 +1,41 @@
+.mode-tabs-grouped {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mode-group-title {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 0 0 6px 14px;
+}
+
+.entity-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.entity-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+
+.entity-group:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.entity-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin: 0;
+}

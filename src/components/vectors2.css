@@ -76,6 +76,13 @@
   margin: 6px 0 0;
 }
 
+/* vectors2's hint is longer and has inline color legends, so it reads
+   better a little smaller than vectors1's short one-liner. */
+.canvas-hint {
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
 .page-nav-link {
   display: inline-block;
   margin-top: 14px;

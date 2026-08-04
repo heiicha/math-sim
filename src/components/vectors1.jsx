@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import ControlPanel from "./vectorcomponents/ControlPanel";
 import VectorCanvas from "./vectorcomponents/VectorCanvas";
 import ReadoutPanel from "./vectorcomponents/ReadoutPanel";
@@ -48,6 +49,9 @@ function Vectors1() {
         <h1 className="topic-header"> Vectors I</h1>
         <h1>{MODES[mode].label}</h1>
         <p className="tagline">{MODES[mode].tagline}</p>
+        <Link to="/vectors2" className="page-nav-link">
+          Vectors II — lines &amp; planes in 3D →
+        </Link>
       </header>
 
       <main className="layout">

@@ -1,0 +1,86 @@
+.cartesian-eq {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  color: var(--result);
+  margin: 4px 0 0;
+}
+
+.symmetric-eq {
+  margin: 4px 0 0;
+}
+
+.symmetric-eq-chain {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.symmetric-eq-term {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.eq-sign {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.05rem;
+  margin: 0 2px;
+}
+
+.frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.frac-num,
+.frac-den {
+  padding: 0 4px;
+  white-space: nowrap;
+}
+
+.frac-line {
+  width: 100%;
+  border-top: 1.5px solid var(--text);
+  margin: 1px 0;
+}
+
+.fixed-axes {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin: 10px 0 0;
+}
+
+.relation-badge {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+
+.relation-intersecting {
+  color: var(--result);
+}
+
+.relation-parallel,
+.relation-skew {
+  color: var(--vec-b);
+}
+
+.relation-contained,
+.relation-same {
+  color: var(--accent);
+}
+
+.relation-degenerate {
+  color: var(--vec-a);
+}

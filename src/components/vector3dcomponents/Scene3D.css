@@ -1,0 +1,15 @@
+.scene3d {
+  width: 100%;
+  line-height: 0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.scene3d canvas {
+  display: block;
+  cursor: grab;
+}
+
+.scene3d canvas:active {
+  cursor: grabbing;
+}
