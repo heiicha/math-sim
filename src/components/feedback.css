@@ -1,13 +1,14 @@
 .feedback-button {
     background-color: var(--accent);
     border-radius: 50px;
-    size: 1.2rem;
+    font-size: 1.05rem;
     color: white;
     font-family: var(--font-display);
     font-weight: 800;
     outline: none;
     border: none;
-    padding: 0.5rem;
+    padding: 0.7rem 1.4rem;
+    cursor: pointer;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 

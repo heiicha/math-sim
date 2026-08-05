@@ -27,7 +27,7 @@ export default function LandingPage() {
         <h1 className="landing-title">Visualizing</h1>
         <h1 className="landing-title-2"> Mathematics</h1>
         <p className="landing-tagline">
-          An open-source math project 
+          An open-source math project
         </p>
         <button className="landing-start" onClick={() => navigate("/topics")}>
           START

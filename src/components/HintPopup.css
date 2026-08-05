@@ -1,0 +1,39 @@
+.hint-popup {
+  position: relative;
+  margin-top: 12px;
+  padding: 12px 34px 12px 16px;
+  background: var(--panel-raised);
+  border: 1px solid var(--margin-rule);
+  border-radius: 10px;
+  text-align: left;
+}
+
+.hint-popup-body {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+
+.hint-popup-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: var(--text-dim);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.hint-popup-close:hover {
+  background: var(--line);
+  color: var(--text);
+}

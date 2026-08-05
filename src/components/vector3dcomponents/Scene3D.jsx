@@ -44,7 +44,10 @@ function toThree(v) {
 }
 
 function disposeObject(obj) {
-  obj.geometry?.dispose();
+  // Sprite.geometry is a module-level singleton shared by every THREE.Sprite
+  // in the app (see three's Sprite.js) — disposing it here would tear down
+  // that shared buffer on every rebuild instead of anything owned by `obj`.
+  if (!obj.isSprite) obj.geometry?.dispose();
   if (Array.isArray(obj.material)) obj.material.forEach((m) => m.dispose());
   else obj.material?.dispose();
 }
@@ -120,9 +123,58 @@ function addHandle(group, position, kind, entity, field, extra = {}) {
   return mesh;
 }
 
+// A hollow-ring texture, built once and reused (tinted per-marker via
+// SpriteMaterial.color) — cheaper than drawing a fresh canvas per handle,
+// which matters since the whole scene rebuilds on every drag frame.
+let handleRingTexture = null;
+function getHandleRingTexture() {
+  if (handleRingTexture) return handleRingTexture;
+  const size = 128;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  const cx = size / 2;
+  const cy = size / 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, size * 0.44, 0, Math.PI * 2);
+  ctx.arc(cx, cy, size * 0.32, 0, Math.PI * 2, true);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill("evenodd");
+  handleRingTexture = new THREE.CanvasTexture(canvas);
+  return handleRingTexture;
+}
+
+const HANDLE_MARKER_SCALE = 0.5;
+const HANDLE_MARKER_HOVER_SCALE = 0.72;
+
+// Always-visible ring, billboarded to face the camera, that sits on every
+// draggable point/arrow-tip so students can see at a glance what's
+// grabbable — separate from the invisible raycast sphere above, which only
+// exists to make the hit-target bigger than the tiny visible geometry.
+function addHandleMarker(group, position, colorHex) {
+  const material = new THREE.SpriteMaterial({
+    map: getHandleRingTexture(),
+    color: colorHex,
+    transparent: true,
+    opacity: 0.9,
+    depthTest: false,
+    depthWrite: false,
+  });
+  const sprite = new THREE.Sprite(material);
+  sprite.position.copy(position);
+  sprite.scale.set(HANDLE_MARKER_SCALE, HANDLE_MARKER_SCALE, 1);
+  sprite.userData.baseScale = HANDLE_MARKER_SCALE;
+  sprite.renderOrder = 1;
+  group.add(sprite);
+  return sprite;
+}
+
 function addDraggablePoint(group, point, colorHex, radius, entity, field) {
   addPoint(group, point, colorHex, radius);
-  addHandle(group, toThree(point), "point", entity, field);
+  const marker = addHandleMarker(group, toThree(point), colorHex);
+  const handle = addHandle(group, toThree(point), "point", entity, field);
+  handle.userData.marker = marker;
 }
 
 function addDraggableArrow(group, origin, direction, colorHex, length, entity, field) {
@@ -131,7 +183,9 @@ function addDraggableArrow(group, origin, direction, colorHex, length, entity, f
   if (dir.length() < 1e-6) return;
   dir.normalize();
   const tip = toThree(origin).addScaledVector(dir, length);
-  addHandle(group, tip, "direction", entity, field, { origin });
+  const marker = addHandleMarker(group, tip, colorHex);
+  const handle = addHandle(group, tip, "direction", entity, field, { origin });
+  handle.userData.marker = marker;
 }
 
 function addPlane(group, plane, colorHex, opacity = 0.28, half = PLANE_SIZE / 2) {
@@ -441,6 +495,21 @@ export default function Scene3D({
       return raycaster.intersectObjects(handles, false)[0]?.object ?? null;
     }
 
+    // Enlarges a handle's visible ring on hover, as a second (motion) cue on
+    // top of the cursor change — reset before switching to whatever's newly
+    // hovered (or nothing). `handle` may reference a mesh from a since-disposed
+    // rebuild; mutating a detached object's scale is harmless, it just no
+    // longer renders.
+    let hoveredHandle = null;
+    function setHoveredHandle(handle) {
+      if (hoveredHandle === handle) return;
+      const prevMarker = hoveredHandle?.userData?.marker;
+      if (prevMarker) prevMarker.scale.setScalar(prevMarker.userData.baseScale);
+      hoveredHandle = handle;
+      const nextMarker = hoveredHandle?.userData?.marker;
+      if (nextMarker) nextMarker.scale.setScalar(HANDLE_MARKER_HOVER_SCALE);
+    }
+
     function onPointerDown(evt) {
       const hit = pickHandle(evt);
       if (!hit) return; // let it bubble to OrbitControls for orbiting
@@ -451,22 +520,34 @@ export default function Scene3D({
       const camDir = camera.getWorldDirection(new THREE.Vector3());
       dragPlane.setFromNormalAndCoplanarPoint(camDir, p0);
       renderer.domElement.setPointerCapture(evt.pointerId);
+      renderer.domElement.style.cursor = "grabbing";
     }
     function onPointerMove(evt) {
-      if (!dragTarget) return;
-      toNDC(evt);
-      raycaster.setFromCamera(ndc, camera);
-      if (raycaster.ray.intersectPlane(dragPlane, hitPoint)) applyDrag(dragTarget, hitPoint);
+      if (dragTarget) {
+        toNDC(evt);
+        raycaster.setFromCamera(ndc, camera);
+        if (raycaster.ray.intersectPlane(dragPlane, hitPoint)) applyDrag(dragTarget, hitPoint);
+        return;
+      }
+      const hit = pickHandle(evt);
+      setHoveredHandle(hit);
+      renderer.domElement.style.cursor = hit ? "grab" : "auto";
     }
     function onPointerUp(evt) {
       if (dragTarget) renderer.domElement.releasePointerCapture(evt.pointerId);
       dragTarget = null;
       controls.enabled = true;
+      renderer.domElement.style.cursor = hoveredHandle ? "grab" : "auto";
+    }
+    function onPointerLeave() {
+      setHoveredHandle(null);
+      if (!dragTarget) renderer.domElement.style.cursor = "auto";
     }
     // capture:true so this runs before OrbitControls' own bubble-phase
     // pointerdown listener on the same element — otherwise orbiting would
     // already have started by the time we disable controls.
     renderer.domElement.addEventListener("pointerdown", onPointerDown, { capture: true });
+    renderer.domElement.addEventListener("pointerleave", onPointerLeave);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
 
@@ -491,6 +572,7 @@ export default function Scene3D({
       cancelAnimationFrame(frameId);
       resizeObserver.disconnect();
       renderer.domElement.removeEventListener("pointerdown", onPointerDown, { capture: true });
+      renderer.domElement.removeEventListener("pointerleave", onPointerLeave);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
       controls.dispose();

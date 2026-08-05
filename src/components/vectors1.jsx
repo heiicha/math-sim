@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import ControlPanel from "./vectorcomponents/ControlPanel";
 import VectorCanvas from "./vectorcomponents/VectorCanvas";
 import ReadoutPanel from "./vectorcomponents/ReadoutPanel";
+import HintPopup from "./HintPopup";
 import "./vectors1.css";
 
 export const MODES = {
@@ -78,9 +79,9 @@ function Vectors1() {
               crossShape={crossShape}
               ratio={ratio}
             />
-            <p className="canvas-hint">
+            <HintPopup storageKey="vectors1-hint-dismissed">
               Input coordinates below or drag the arrows/circles. All vectors here are position vectors. (i.e <b>a</b> = OA)
-            </p>
+            </HintPopup>
           </section>
         </div>
 

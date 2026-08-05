@@ -75,14 +75,6 @@
   gap: 20px;
 }
 
-.canvas-hint {
-  font-family: var(--font-mono);
-  font-size: 1.2rem;
-  color: var(--text-dim);
-  text-align: center;
-  margin: 6px 0 0;
-}
-
 .page-nav-link {
   display: inline-block;
   margin-top: 14px;

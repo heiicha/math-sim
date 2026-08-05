@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import ControlPanel3D from "./vector3dcomponents/ControlPanel3D";
 import Scene3D from "./vector3dcomponents/Scene3D";
 import ReadoutPanel3D from "./vector3dcomponents/ReadoutPanel3D";
+import HintPopup from "./HintPopup";
 import "./vectors2.css";
 
 export const MODE_GROUPS = [
@@ -125,7 +126,7 @@ function Vectors2() {
               pointLineView={pointLineView}
               pointPlaneView={pointPlaneView}
             />
-            <p className="canvas-hint">
+            <HintPopup storageKey="vectors2-hint-dismissed">
               Drag empty space to orbit, scroll to zoom, or drag a point/arrow tip to edit it directly.
               z is drawn as height here; edit x, y, z below —
               entity 1 is always {" "}
@@ -133,7 +134,7 @@ function Vectors2() {
               <span style={{ color: "var(--vec-b)", fontWeight: 600 }}>this color</span>, and
               anything computed (intersections, distances) is{" "}
               <span style={{ color: "var(--result)", fontWeight: 600 }}>this color</span>.
-            </p>
+            </HintPopup>
           </section>
         </div>
 
