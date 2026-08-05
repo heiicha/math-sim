@@ -55,6 +55,48 @@ function ColumnVectorInput({ label, color, vector, onChange }) {
   );
 }
 
+const EXTRA_VECTOR_DEFAULTS = {
+  vecC: { tail: { x: 2, y: 2, z: 0 }, head: { x: 4, y: 3, z: 0 } },
+  vecD: { tail: { x: -3, y: -2, z: 0 }, head: { x: -1, y: -3, z: 0 } },
+};
+
+function ExtraVectors({ vecC, setVecC, vecD, setVecD }) {
+  const slots = [
+    { key: "vecC", label: "c", color: "var(--vec-c)", vector: vecC, setVector: setVecC },
+    { key: "vecD", label: "d", color: "var(--vec-d)", vector: vecD, setVector: setVecD },
+  ];
+  const nextEmpty = slots.find((s) => !s.vector);
+
+  return (
+    <>
+      {slots.map((s) =>
+        s.vector ? (
+          <div className="removable-entity" key={s.key}>
+            <ColumnVectorInput label={s.label} color={s.color} vector={s.vector} onChange={s.setVector} />
+            <button
+              type="button"
+              className="remove-entity-button"
+              onClick={() => s.setVector(null)}
+              aria-label={`Remove vector ${s.label}`}
+            >
+              ×
+            </button>
+          </div>
+        ) : null
+      )}
+      {nextEmpty && (
+        <button
+          type="button"
+          className="add-entity-button"
+          onClick={() => nextEmpty.setVector(EXTRA_VECTOR_DEFAULTS[nextEmpty.key])}
+        >
+          + Add vector
+        </button>
+      )}
+    </>
+  );
+}
+
 function CrossShapeToggle({ crossShape, setCrossShape }) {
   return (
     <div className="shape-toggle">
@@ -103,6 +145,10 @@ export default function ControlPanel({
   setVecA,
   vecB,
   setVecB,
+  vecC,
+  setVecC,
+  vecD,
+  setVecD,
   crossShape,
   setCrossShape,
   ratio,
@@ -113,6 +159,9 @@ export default function ControlPanel({
       <div className="vector-inputs">
         <ColumnVectorInput label="a" color="var(--vec-a)" vector={vecA} onChange={setVecA} />
         <ColumnVectorInput label="b" color="var(--vec-b)" vector={vecB} onChange={setVecB} />
+        {mode === "addition" && (
+          <ExtraVectors vecC={vecC} setVecC={setVecC} vecD={vecD} setVecD={setVecD} />
+        )}
       </div>
 
       {mode === "cross" && (

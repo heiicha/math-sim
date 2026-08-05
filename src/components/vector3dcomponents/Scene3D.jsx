@@ -29,6 +29,8 @@ function readColors() {
   return {
     entity1: get("--vec-a") || "#e4b980",
     entity2: get("--vec-b") || "#6990e4",
+    entity3: get("--vec-c") || "#5fae6b",
+    entity4: get("--vec-d") || "#e0a23d",
     result: get("--result") || "#996ae9",
     accent: get("--accent") || "#2b63da",
     canvasBg: get("--canvas-bg") || get("--panel") || "#ffffff",
@@ -322,19 +324,44 @@ function addAngleArc(group, vertex, uDir, vDir, angleDeg, colorHex, radius = 0.8
   return tube;
 }
 
-function buildAxes(group) {
+// Small billboarded text label (e.g. "x") — built fresh per call since the
+// text/color differ per axis, but buildAxes only runs once per mount (it's
+// part of the static, never-rebuilt group), so this isn't a per-frame cost.
+function createTextSprite(text, colorHex) {
+  const size = 64;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  ctx.font = "bold 40px sans-serif";
+  ctx.fillStyle = colorHex;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, size / 2, size / 2);
+  const texture = new THREE.CanvasTexture(canvas);
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false });
+  const sprite = new THREE.Sprite(material);
+  sprite.scale.set(0.6, 0.6, 1);
+  return sprite;
+}
+
+function buildAxes(group, colors) {
   const axisLen = 8;
   const specs = [
-    { dir: new THREE.Vector3(1, 0, 0), color: 0xb8b8b8 }, // math x
-    { dir: new THREE.Vector3(0, 1, 0), color: 0xb8b8b8 }, // math z (up)
-    { dir: new THREE.Vector3(0, 0, 1), color: 0xb8b8b8 }, // math y
+    { dir: new THREE.Vector3(1, 0, 0), color: 0xb8b8b8, label: "x" }, // math x
+    { dir: new THREE.Vector3(0, 1, 0), color: 0xb8b8b8, label: "z" }, // math z (up)
+    { dir: new THREE.Vector3(0, 0, 1), color: 0xb8b8b8, label: "y" }, // math y
   ];
-  specs.forEach(({ dir, color }) => {
+  specs.forEach(({ dir, color, label }) => {
     const a = dir.clone().multiplyScalar(-axisLen);
     const b = dir.clone().multiplyScalar(axisLen);
     const geometry = new THREE.BufferGeometry().setFromPoints([a, b]);
     const material = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.55 });
     group.add(new THREE.Line(geometry, material));
+
+    const labelSprite = createTextSprite(label, colors.dim);
+    labelSprite.position.copy(b).addScaledVector(dir, 0.6);
+    group.add(labelSprite);
   });
 }
 
@@ -344,10 +371,26 @@ export default function Scene3D({
   setLine1,
   line2,
   setLine2,
+  line3,
+  setLine3,
+  line4,
+  setLine4,
   plane1,
   setPlane1,
   plane2,
   setPlane2,
+  plane3,
+  setPlane3,
+  plane4,
+  setPlane4,
+  lpLine1,
+  setLpLine1,
+  lpLine2,
+  setLpLine2,
+  lpPlane1,
+  setLpPlane1,
+  lpPlane2,
+  setLpPlane2,
   point1,
   setPoint1,
   planePlaneView,
@@ -357,34 +400,32 @@ export default function Scene3D({
   pointPlaneView,
 }) {
   const containerRef = useRef(null);
-  const stateRef = useRef({
+  const state = {
     mode,
     line1,
     setLine1,
     line2,
     setLine2,
+    line3,
+    setLine3,
+    line4,
+    setLine4,
     plane1,
     setPlane1,
     plane2,
     setPlane2,
-    point1,
-    setPoint1,
-    planePlaneView,
-    linePlaneView,
-    lineLineView,
-    pointLineView,
-    pointPlaneView,
-  });
-  stateRef.current = {
-    mode,
-    line1,
-    setLine1,
-    line2,
-    setLine2,
-    plane1,
-    setPlane1,
-    plane2,
-    setPlane2,
+    plane3,
+    setPlane3,
+    plane4,
+    setPlane4,
+    lpLine1,
+    setLpLine1,
+    lpLine2,
+    setLpLine2,
+    lpPlane1,
+    setLpPlane1,
+    lpPlane2,
+    setLpPlane2,
     point1,
     setPoint1,
     planePlaneView,
@@ -393,6 +434,8 @@ export default function Scene3D({
     pointLineView,
     pointPlaneView,
   };
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   const rendererRef = useRef(null);
   const sceneRef = useRef(null);
@@ -432,7 +475,7 @@ export default function Scene3D({
     scene.add(grid);
 
     const staticGroup = new THREE.Group();
-    buildAxes(staticGroup);
+    buildAxes(staticGroup, colors);
     scene.add(staticGroup);
 
     const dynamicGroup = new THREE.Group();
@@ -464,10 +507,31 @@ export default function Scene3D({
       const setters = {
         line1: s.setLine1,
         line2: s.setLine2,
+        line3: s.setLine3,
+        line4: s.setLine4,
         plane1: s.setPlane1,
         plane2: s.setPlane2,
+        plane3: s.setPlane3,
+        plane4: s.setPlane4,
+        lpLine1: s.setLpLine1,
+        lpLine2: s.setLpLine2,
+        lpPlane1: s.setLpPlane1,
+        lpPlane2: s.setLpPlane2,
       };
-      const current = { line1: s.line1, line2: s.line2, plane1: s.plane1, plane2: s.plane2 };
+      const current = {
+        line1: s.line1,
+        line2: s.line2,
+        line3: s.line3,
+        line4: s.line4,
+        plane1: s.plane1,
+        plane2: s.plane2,
+        plane3: s.plane3,
+        plane4: s.plane4,
+        lpLine1: s.lpLine1,
+        lpLine2: s.lpLine2,
+        lpPlane1: s.lpPlane1,
+        lpPlane2: s.lpPlane2,
+      };
       const setFn = setters[entity];
       if (!setFn) return;
 
@@ -595,8 +659,16 @@ export default function Scene3D({
       mode,
       line1,
       line2,
+      line3,
+      line4,
       plane1,
       plane2,
+      plane3,
+      plane4,
+      lpLine1,
+      lpLine2,
+      lpPlane1,
+      lpPlane2,
       point1,
       planePlaneView,
       linePlaneView,
@@ -614,154 +686,239 @@ export default function Scene3D({
       addDraggablePoint(group, plane1.point, colors.entity1, 0.13, "plane1", "point");
       addDraggableArrow(group, plane1.point, plane1.normal, colors.entity1, 2, "plane1", "normal");
     } else if (mode === "linePlane") {
-      const rel = linePlaneRelationship(line1, plane1);
-      const hits = rel.type === "intersecting" ? [rel.point] : [];
+      // line1/plane1 are always present; lpLine1/lpLine2/lpPlane1/lpPlane2
+      // are a shared pool of up to 2 extras (each either a line or a
+      // plane) — color follows the same fixed priority ControlPanel3D uses.
+      const lineEntries = [{ key: "line1", data: line1, color: colors.entity1 }];
+      const planeEntries = [{ key: "plane1", data: plane1, color: colors.entity2 }];
+      const lpSlots = [
+        { key: "lpLine1", type: "line", data: lpLine1 },
+        { key: "lpLine2", type: "line", data: lpLine2 },
+        { key: "lpPlane1", type: "plane", data: lpPlane1 },
+        { key: "lpPlane2", type: "plane", data: lpPlane2 },
+      ].filter((s) => s.data);
+      lpSlots.forEach((slot, i) => {
+        const color = i === 0 ? colors.entity3 : colors.entity4;
+        if (slot.type === "line") lineEntries.push({ key: slot.key, data: slot.data, color });
+        else planeEntries.push({ key: slot.key, data: slot.data, color });
+      });
 
-      addPlane(group, plane1, colors.entity2, 0.22, planeHalfFor(plane1, hits));
-      addDraggablePoint(group, plane1.point, colors.entity2, 0.11, "plane1", "point");
-      addDraggableArrow(group, plane1.point, plane1.normal, colors.entity2, 1.8, "plane1", "normal");
+      const isRelationshipView = linePlaneView !== "reflection";
+      const pairs = [];
+      if (isRelationshipView) {
+        lineEntries.forEach((l) => {
+          planeEntries.forEach((pl) => {
+            pairs.push({ line: l, plane: pl, rel: linePlaneRelationship(l.data, pl.data) });
+          });
+        });
+      }
+      const hitsForLine = (entry) =>
+        pairs.filter((pr) => pr.line === entry && pr.rel.type === "intersecting").map((pr) => pr.rel.point);
+      const hitsForPlane = (entry) =>
+        pairs.filter((pr) => pr.plane === entry && pr.rel.type === "intersecting").map((pr) => pr.rel.point);
 
-      addInfiniteLine(group, line1, colors.entity1, 1, false, lineReachFor(line1, hits));
-      addDraggablePoint(group, line1.point, colors.entity1, 0.13, "line1", "point");
-      addDraggableArrow(group, line1.point, line1.direction, colors.entity1, 1.6, "line1", "direction");
+      planeEntries.forEach((entry) => {
+        addPlane(group, entry.data, entry.color, 0.22, planeHalfFor(entry.data, hitsForPlane(entry)));
+        addDraggablePoint(group, entry.data.point, entry.color, 0.11, entry.key, "point");
+        addDraggableArrow(group, entry.data.point, entry.data.normal, entry.color, 1.8, entry.key, "normal");
+      });
+      lineEntries.forEach((entry) => {
+        addInfiniteLine(group, entry.data, entry.color, 1, false, lineReachFor(entry.data, hitsForLine(entry)));
+        addDraggablePoint(group, entry.data.point, entry.color, 0.13, entry.key, "point");
+        addDraggableArrow(group, entry.data.point, entry.data.direction, entry.color, 1.6, entry.key, "direction");
+      });
 
       if (linePlaneView === "reflection") {
-        const reflected = reflectLineAcrossPlane(line1, plane1);
-        addInfiniteLine(group, reflected, colors.result, 1, false);
-        addPoint(group, reflected.point, colors.result, 0.13);
-        addArrow(group, reflected.point, reflected.direction, colors.result, 1.6);
-      } else if (rel.type === "intersecting") {
-        addPoint(group, rel.point, colors.result, 0.16);
-        // angle between the line and its own shadow on the plane
-        const shadow = perpendicularComponent(line1.direction, plane1.normal);
-        addAngleArc(group, toThree(rel.point), toThree(line1.direction), toThree(shadow), rel.angleDeg, colors.result);
+        // reflect every line present across the base plane (plane1)
+        const mirror = planeEntries[0].data;
+        lineEntries.forEach((entry) => {
+          const reflected = reflectLineAcrossPlane(entry.data, mirror);
+          addInfiniteLine(group, reflected, colors.result, 1, false);
+          addPoint(group, reflected.point, colors.result, 0.13);
+          addArrow(group, reflected.point, reflected.direction, colors.result, 1.6);
+        });
+      } else {
+        pairs.forEach((pr) => {
+          if (pr.rel.type !== "intersecting") return;
+          addPoint(group, pr.rel.point, colors.result, 0.16);
+          // angle between the line and its own shadow on the plane
+          const shadow = perpendicularComponent(pr.line.data.direction, pr.plane.data.normal);
+          addAngleArc(group, toThree(pr.rel.point), toThree(pr.line.data.direction), toThree(shadow), pr.rel.angleDeg, colors.result);
+        });
       }
     } else if (mode === "lineLine") {
-      const rel = lineLineRelationship(line1, line2);
+      const lineEntries = [
+        { key: "line1", data: line1, color: colors.entity1 },
+        { key: "line2", data: line2, color: colors.entity2 },
+        ...(line3 ? [{ key: "line3", data: line3, color: colors.entity3 }] : []),
+        ...(line4 ? [{ key: "line4", data: line4, color: colors.entity4 }] : []),
+      ];
       const isRelationshipView = lineLineView !== "addition" && lineLineView !== "cross";
-      let closest = null;
-      let hits1 = [];
-      let hits2 = [];
+
+      // Every pair's relationship, computed once — reused both to size each
+      // line's drawn reach (so it visibly meets whatever it intersects, or
+      // reaches its closest point on a skew partner) and for the
+      // relationship-view overlays themselves.
+      const pairs = [];
       if (isRelationshipView) {
-        if (rel.type === "intersecting") {
-          hits1 = [rel.point];
-          hits2 = [rel.point];
-        } else if (rel.type === "skew") {
-          closest = closestPointsOnSkewLines(line1, line2);
-          if (closest) {
-            hits1 = [closest.P1];
-            hits2 = [closest.P2];
+        for (let i = 0; i < lineEntries.length; i++) {
+          for (let j = i + 1; j < lineEntries.length; j++) {
+            const a = lineEntries[i];
+            const b = lineEntries[j];
+            const rel = lineLineRelationship(a.data, b.data);
+            const closest = rel.type === "skew" ? closestPointsOnSkewLines(a.data, b.data) : null;
+            pairs.push({ a, b, rel, closest });
           }
         }
       }
+      const hitsFor = (entry) => {
+        const hits = [];
+        pairs.forEach((pr) => {
+          if (pr.a !== entry && pr.b !== entry) return;
+          if (pr.rel.type === "intersecting") hits.push(pr.rel.point);
+          else if (pr.rel.type === "skew" && pr.closest) hits.push(pr.a === entry ? pr.closest.P1 : pr.closest.P2);
+        });
+        return hits;
+      };
 
-      addInfiniteLine(group, line1, colors.entity1, 1, false, lineReachFor(line1, hits1));
-      addDraggablePoint(group, line1.point, colors.entity1, 0.13, "line1", "point");
-      addDraggableArrow(group, line1.point, line1.direction, colors.entity1, 1.6, "line1", "direction");
-
-      addInfiniteLine(group, line2, colors.entity2, 1, false, lineReachFor(line2, hits2));
-      addDraggablePoint(group, line2.point, colors.entity2, 0.13, "line2", "point");
-      addDraggableArrow(group, line2.point, line2.direction, colors.entity2, 1.6, "line2", "direction");
+      lineEntries.forEach((entry) => {
+        addInfiniteLine(group, entry.data, entry.color, 1, false, lineReachFor(entry.data, hitsFor(entry)));
+        addDraggablePoint(group, entry.data.point, entry.color, 0.13, entry.key, "point");
+        addDraggableArrow(group, entry.data.point, entry.data.direction, entry.color, 1.6, entry.key, "direction");
+      });
 
       if (lineLineView === "addition") {
-        const anchor = line1.point;
-        const sum = add(line1.direction, line2.direction);
+        const anchor = lineEntries[0].data.point;
+        const dirs = lineEntries.map((e) => e.data.direction);
+        const sum = dirs.reduce((acc, d) => add(acc, d), { x: 0, y: 0, z: 0 });
         const sumMag = magnitude(sum);
         if (sumMag > 1e-6) {
           addArrow(group, anchor, sum, colors.result, sumMag);
-          const tip1 = add(anchor, line1.direction);
-          const tip2 = add(anchor, line2.direction);
-          const sumPoint = add(anchor, sum);
-          addSegment(group, tip1, sumPoint, colors.entity2);
-          addSegment(group, tip2, sumPoint, colors.entity1);
+          if (lineEntries.length === 2) {
+            // default (exactly 2 lines): keep the original parallelogram-
+            // style completion, one segment per direction
+            const tip1 = add(anchor, dirs[0]);
+            const tip2 = add(anchor, dirs[1]);
+            const sumPoint = add(anchor, sum);
+            addSegment(group, tip1, sumPoint, lineEntries[1].color);
+            addSegment(group, tip2, sumPoint, lineEntries[0].color);
+          } else {
+            // 3+ lines: a simple tip-to-tail chain
+            let elbow = add(anchor, dirs[0]);
+            for (let i = 1; i < dirs.length; i++) {
+              const next = add(elbow, dirs[i]);
+              addSegment(group, elbow, next, lineEntries[i].color);
+              elbow = next;
+            }
+          }
         }
       } else if (lineLineView === "cross") {
-        const anchor = line1.point;
-        addParallelogram(group, anchor, line1.direction, line2.direction, colors.result);
-        const cross = crossProduct(line1.direction, line2.direction);
+        // cross product is strictly binary — always line1 x line2, extra
+        // lines don't participate
+        const anchor = lineEntries[0].data.point;
+        addParallelogram(group, anchor, lineEntries[0].data.direction, lineEntries[1].data.direction, colors.result);
+        const cross = crossProduct(lineEntries[0].data.direction, lineEntries[1].data.direction);
         addArrow(group, anchor, cross, colors.result, 1.6);
       } else {
-        // arcs use the acute-side direction for line2, matching angleDeg's
-        // acos(|dot|/...) — flip d2 when the raw dot product is negative.
-        const d2Acute = dot(line1.direction, line2.direction) >= 0
-          ? line2.direction
-          : { x: -line2.direction.x, y: -line2.direction.y, z: -(line2.direction.z || 0) };
+        pairs.forEach((pr) => {
+          // arcs use the acute-side direction for b, matching angleDeg's
+          // acos(|dot|/...) — flip it when the raw dot product is negative.
+          const bDir = pr.b.data.direction;
+          const dAcute = dot(pr.a.data.direction, bDir) >= 0
+            ? bDir
+            : { x: -bDir.x, y: -bDir.y, z: -(bDir.z || 0) };
 
-        if (rel.type === "intersecting") {
-          addPoint(group, rel.point, colors.result, 0.16);
-          addAngleArc(group, toThree(rel.point), toThree(line1.direction), toThree(d2Acute), rel.angleDeg, colors.result);
-        } else if (rel.type === "skew") {
-          if (closest) {
-            const { P1, P2 } = closest;
+          if (pr.rel.type === "intersecting") {
+            addPoint(group, pr.rel.point, colors.result, 0.16);
+            addAngleArc(group, toThree(pr.rel.point), toThree(pr.a.data.direction), toThree(dAcute), pr.rel.angleDeg, colors.result);
+          } else if (pr.rel.type === "skew" && pr.closest) {
+            const { P1, P2 } = pr.closest;
             addPoint(group, P1, colors.result, 0.1);
             addPoint(group, P2, colors.result, 0.1);
             addSegment(group, P1, P2, colors.result);
             const midpoint = toThree(P1).lerp(toThree(P2), 0.5);
-            addAngleArc(group, midpoint, toThree(line1.direction), toThree(d2Acute), rel.angleDeg, colors.result);
+            addAngleArc(group, midpoint, toThree(pr.a.data.direction), toThree(dAcute), pr.rel.angleDeg, colors.result);
+          }
+        });
+      }
+    } else if (mode === "planePlane") {
+      const planeEntries = [
+        { key: "plane1", data: plane1, color: colors.entity1 },
+        { key: "plane2", data: plane2, color: colors.entity2 },
+        ...(plane3 ? [{ key: "plane3", data: plane3, color: colors.entity3 }] : []),
+        ...(plane4 ? [{ key: "plane4", data: plane4, color: colors.entity4 }] : []),
+      ];
+
+      const pairs = [];
+      if (planePlaneView === "angle" || planePlaneView === "distance") {
+        for (let i = 0; i < planeEntries.length; i++) {
+          for (let j = i + 1; j < planeEntries.length; j++) {
+            pairs.push({ a: planeEntries[i], b: planeEntries[j], rel: planePlaneRelationship(planeEntries[i].data, planeEntries[j].data) });
           }
         }
       }
-    } else if (mode === "planePlane") {
-      const rel = planePlaneRelationship(plane1, plane2);
 
-      // For the angle view, size both plane patches (and the drawn
-      // intersection line) around the point on that line closest to each
-      // plane's own defining point, so the patches visibly meet along it
-      // instead of the line passing outside their fixed-size quads.
-      let hits1 = [];
-      let hits2 = [];
-      let lineHits = [];
-      if (planePlaneView === "angle" && rel.type === "intersecting") {
-        const footOnLine = (point) => {
-          const p = toThree(rel.line.point);
-          const d = toThree(rel.line.direction).normalize();
-          const t = toThree(point).sub(p).dot(d);
-          const footThree = p.clone().addScaledVector(d, t);
-          return { x: footThree.x, y: footThree.z, z: footThree.y };
-        };
-        hits1 = [footOnLine(plane1.point)];
-        hits2 = [footOnLine(plane2.point)];
-        lineHits = [...hits1, ...hits2];
-      }
+      // For the angle view, size each plane patch around the point on its
+      // intersection line (with every other plane it meets) closest to its
+      // own defining point, so the patches visibly meet along that line
+      // instead of it passing outside their fixed-size quads.
+      const footOnLine = (line, point) => {
+        const p = toThree(line.point);
+        const d = toThree(line.direction).normalize();
+        const t = toThree(point).sub(p).dot(d);
+        const footThree = p.clone().addScaledVector(d, t);
+        return { x: footThree.x, y: footThree.z, z: footThree.y };
+      };
+      const hitsFor = (entry) => {
+        if (planePlaneView !== "angle") return [];
+        return pairs
+          .filter((pr) => pr.rel.type === "intersecting" && (pr.a === entry || pr.b === entry))
+          .map((pr) => footOnLine(pr.rel.line, entry.data.point));
+      };
 
-      addPlane(group, plane1, colors.entity1, 0.28, planeHalfFor(plane1, hits1));
-      addDraggablePoint(group, plane1.point, colors.entity1, 0.11, "plane1", "point");
-      addDraggableArrow(group, plane1.point, plane1.normal, colors.entity1, 1.8, "plane1", "normal");
-
-      addPlane(group, plane2, colors.entity2, 0.28, planeHalfFor(plane2, hits2));
-      addDraggablePoint(group, plane2.point, colors.entity2, 0.11, "plane2", "point");
-      addDraggableArrow(group, plane2.point, plane2.normal, colors.entity2, 1.8, "plane2", "normal");
+      planeEntries.forEach((entry) => {
+        addPlane(group, entry.data, entry.color, 0.28, planeHalfFor(entry.data, hitsFor(entry)));
+        addDraggablePoint(group, entry.data.point, entry.color, 0.11, entry.key, "point");
+        addDraggableArrow(group, entry.data.point, entry.data.normal, entry.color, 1.8, entry.key, "normal");
+      });
 
       if (planePlaneView === "reflection") {
-        const reflected = reflectPlaneAcrossPlane(plane2, plane1);
-        addPlane(group, reflected, colors.result, 0.28);
-        addPoint(group, reflected.point, colors.result, 0.11);
-        addArrow(group, reflected.point, reflected.normal, colors.result, 1.8);
+        // reflect every other plane across the base plane (plane1)
+        planeEntries.slice(1).forEach((entry) => {
+          const reflected = reflectPlaneAcrossPlane(entry.data, planeEntries[0].data);
+          addPlane(group, reflected, colors.result, 0.28);
+          addPoint(group, reflected.point, colors.result, 0.11);
+          addArrow(group, reflected.point, reflected.normal, colors.result, 1.8);
+        });
       } else if (planePlaneView === "angle") {
-        if (rel.type === "intersecting") {
-          addInfiniteLine(group, rel.line, colors.result, 1, false, lineReachFor(rel.line, lineHits));
-          const n2Acute = dot(plane1.normal, plane2.normal) >= 0
-            ? plane2.normal
-            : { x: -plane2.normal.x, y: -plane2.normal.y, z: -(plane2.normal.z || 0) };
-          addAngleArc(group, toThree(rel.line.point), toThree(plane1.normal), toThree(n2Acute), rel.angleDeg, colors.result);
-        }
-        // parallel/same: angle is 0, nothing extra to draw
+        pairs.forEach((pr) => {
+          if (pr.rel.type !== "intersecting") return;
+          const lineHits = [footOnLine(pr.rel.line, pr.a.data.point), footOnLine(pr.rel.line, pr.b.data.point)];
+          addInfiniteLine(group, pr.rel.line, colors.result, 1, false, lineReachFor(pr.rel.line, lineHits));
+          const bNormal = pr.b.data.normal;
+          const nAcute = dot(pr.a.data.normal, bNormal) >= 0
+            ? bNormal
+            : { x: -bNormal.x, y: -bNormal.y, z: -(bNormal.z || 0) };
+          addAngleArc(group, toThree(pr.rel.line.point), toThree(pr.a.data.normal), toThree(nAcute), pr.rel.angleDeg, colors.result);
+        });
+        // parallel/same pairs: angle is 0, nothing extra to draw
       } else if (planePlaneView === "distance") {
-        if (rel.type === "parallel" || rel.type === "same") {
-          // perpendicular segment from plane1's point to plane2
-          const n = plane2.normal;
+        pairs.forEach((pr) => {
+          if (pr.rel.type !== "parallel" && pr.rel.type !== "same") return;
+          // perpendicular segment from a's point to plane b
+          const n = pr.b.data.normal;
           const nMagSq = n.x * n.x + n.y * n.y + (n.z || 0) * (n.z || 0);
-          const diff = subtract(plane1.point, plane2.point);
+          const diff = subtract(pr.a.data.point, pr.b.data.point);
           const t = (diff.x * n.x + diff.y * n.y + (diff.z || 0) * (n.z || 0)) / nMagSq;
           const foot = {
-            x: plane1.point.x - t * n.x,
-            y: plane1.point.y - t * n.y,
-            z: (plane1.point.z || 0) - t * (n.z || 0),
+            x: pr.a.data.point.x - t * n.x,
+            y: pr.a.data.point.y - t * n.y,
+            z: (pr.a.data.point.z || 0) - t * (n.z || 0),
           };
           addPoint(group, foot, colors.result, 0.1);
-          addSegment(group, plane1.point, foot, colors.result);
-        }
-        // intersecting: distance is 0 — nothing meaningful to draw
+          addSegment(group, pr.a.data.point, foot, colors.result);
+        });
+        // intersecting pairs: distance is 0 — nothing meaningful to draw
       }
     } else if (mode === "pointLine") {
       addInfiniteLine(group, line1, colors.entity2, 1, false, lineReachFor(line1, [point1]));

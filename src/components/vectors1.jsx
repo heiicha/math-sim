@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import TransitionLink from "./TransitionLink";
 import ControlPanel from "./vectorcomponents/ControlPanel";
 import VectorCanvas from "./vectorcomponents/VectorCanvas";
 import ReadoutPanel from "./vectorcomponents/ReadoutPanel";
@@ -33,6 +33,10 @@ function Vectors1() {
   const [mode, setMode] = useState("dot");
   const [vecA, setVecA] = useState({ tail: { x: -2, y: 0, z: 0 }, head: { x: 1, y: 2, z: 1 } });
   const [vecB, setVecB] = useState({ tail: { x: 0, y: -1, z: 0 }, head: { x: 2, y: 1, z: -1 } });
+  // c and d are optional — added via the "+ Add vector" button in Addition
+  // mode, up to 2 extra vectors on top of the default a, b.
+  const [vecC, setVecC] = useState(null);
+  const [vecD, setVecD] = useState(null);
 
   const [crossShape, setCrossShape] = useState("parallelogram"); // "parallelogram" | "triangle"
   const [ratio, setRatio] = useState({ lambda: 1, mu: 1 });
@@ -43,6 +47,8 @@ function Vectors1() {
   });
   const componentsA = componentsOf(vecA);
   const componentsB = componentsOf(vecB);
+  const componentsC = vecC ? componentsOf(vecC) : null;
+  const componentsD = vecD ? componentsOf(vecD) : null;
 
   return (
     <div className="app-shell">
@@ -50,9 +56,9 @@ function Vectors1() {
         <h1 className="topic-header"> Vectors I</h1>
         <h1>{MODES[mode].label}</h1>
         <p className="tagline">{MODES[mode].tagline}</p>
-        <Link to="/vectors2" className="page-nav-link">
+        <TransitionLink to="/vectors2" className="page-nav-link">
           Vectors II — lines &amp; planes in 3D →
-        </Link>
+        </TransitionLink>
       </header>
 
       <main className="layout">
@@ -63,6 +69,10 @@ function Vectors1() {
             setVecA={setVecA}
             vecB={vecB}
             setVecB={setVecB}
+            vecC={vecC}
+            setVecC={setVecC}
+            vecD={vecD}
+            setVecD={setVecD}
             crossShape={crossShape}
             setCrossShape={setCrossShape}
             ratio={ratio}
@@ -76,6 +86,10 @@ function Vectors1() {
               setVecA={setVecA}
               vecB={vecB}
               setVecB={setVecB}
+              vecC={vecC}
+              setVecC={setVecC}
+              vecD={vecD}
+              setVecD={setVecD}
               crossShape={crossShape}
               ratio={ratio}
             />
@@ -103,6 +117,8 @@ function Vectors1() {
             mode={mode}
             vecA={componentsA}
             vecB={componentsB}
+            vecC={componentsC}
+            vecD={componentsD}
             pointA={vecA.head}
             pointB={vecB.head}
             crossShape={crossShape}

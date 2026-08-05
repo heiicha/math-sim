@@ -1,3 +1,22 @@
+.pair-block {
+  padding: 10px 0;
+  border-top: 1px dashed var(--line);
+}
+
+.pair-block:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.pair-heading {
+  border-top: none;
+  padding-top: 0;
+  padding-bottom: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
 .line-equation {
   display: flex;
   align-items: center;

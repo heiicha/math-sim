@@ -43,6 +43,8 @@ function readColors() {
   return {
     vecA: get("--vec-a") || "#e4b980",
     vecB: get("--vec-b") || "#c77dff",
+    vecC: get("--vec-c") || "#5fae6b",
+    vecD: get("--vec-d") || "#e0a23d",
     result: get("--result") || "#6aedcc",
     accent: get("--accent") || "#4cc9f0",
     text: get("--text") || "#e9f0f7",
@@ -60,12 +62,16 @@ export default function VectorCanvas({
   setVecA,
   vecB,
   setVecB,
+  vecC,
+  setVecC,
+  vecD,
+  setVecD,
   crossShape,
   ratio,
 }) {
   const containerRef = useRef(null);
-  const stateRef = useRef({ mode, vecA, vecB, setVecA, setVecB, crossShape, ratio });
-  stateRef.current = { mode, vecA, vecB, setVecA, setVecB, crossShape, ratio };
+  const stateRef = useRef({ mode, vecA, vecB, setVecA, setVecB, vecC, setVecC, vecD, setVecD, crossShape, ratio });
+  stateRef.current = { mode, vecA, vecB, setVecA, setVecB, vecC, setVecC, vecD, setVecD, crossShape, ratio };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -94,9 +100,22 @@ export default function VectorCanvas({
         p.createCanvas(w, h).parent(container);
       };
 
+      // The full list of vectors currently on screen: a and b always, plus
+      // c and/or d when the student has added them (Addition mode only).
+      function getEntities(state) {
+        return [
+          { key: "a", vec: state.vecA, setVec: state.setVecA, color: colors.vecA, label: "a" },
+          { key: "b", vec: state.vecB, setVec: state.setVecB, color: colors.vecB, label: "b" },
+          ...(state.vecC ? [{ key: "c", vec: state.vecC, setVec: state.setVecC, color: colors.vecC, label: "c" }] : []),
+          ...(state.vecD ? [{ key: "d", vec: state.vecD, setVec: state.setVecD, color: colors.vecD, label: "d" }] : []),
+        ];
+      }
+
       p.draw = () => {
-        const { mode, vecA, vecB, crossShape, ratio } = stateRef.current;
+        const state = stateRef.current;
+        const { mode, vecA, vecB, crossShape, ratio } = state;
         const origin = getOrigin();
+        const entities = getEntities(state);
 
         p.background(colors.canvasBg);
         drawGrid(p, origin.x, origin.y);
@@ -104,7 +123,6 @@ export default function VectorCanvas({
 
         const aTailS = toScreen(vecA.tail, origin);
         const aHeadS = toScreen(vecA.head, origin);
-        const bTailS = toScreen(vecB.tail, origin);
         const bHeadS = toScreen(vecB.head, origin);
 
         const aComp = components(vecA);
@@ -131,19 +149,20 @@ export default function VectorCanvas({
             crossShape
           );
         } else if (mode === "addition") {
-          drawAdditionMode(p, aComp, bComp, aForOverlay, bForOverlay, anchor.x, anchor.y, colors);
+          drawAdditionMode(p, entities, anchor.x, anchor.y, colors);
         } else if (mode === "projection") {
           drawProjectionMode(p, aComp, bComp, aForOverlay, bForOverlay, anchor.x, anchor.y, colors);
         } else if (mode === "ratio") {
           drawRatioMode(p, vecA.head, vecB.head, aHeadS, bHeadS, origin, ratio, colors);
         }
-        drawVectorArrow(p, aTailS.x, aTailS.y, aHeadS, colors.vecA, "a");
-        drawVectorArrow(p, bTailS.x, bTailS.y, bHeadS, colors.vecB, "b");
 
-        drawHandle(p, aTailS, colors.vecA, dragging === "a-tail", true);
-        drawHandle(p, aHeadS, colors.vecA, dragging === "a-head", false);
-        drawHandle(p, bTailS, colors.vecB, dragging === "b-tail", true);
-        drawHandle(p, bHeadS, colors.vecB, dragging === "b-head", false);
+        entities.forEach((e) => {
+          const tailS = toScreen(e.vec.tail, origin);
+          const headS = toScreen(e.vec.head, origin);
+          drawVectorArrow(p, tailS.x, tailS.y, headS, e.color, e.label);
+          drawHandle(p, tailS, e.color, dragging === `${e.key}-tail`, true);
+          drawHandle(p, headS, e.color, dragging === `${e.key}-head`, false);
+        });
       };
 
       function drawGrid(p, ox, oy) {
@@ -155,15 +174,14 @@ export default function VectorCanvas({
 
       p.mousePressed = () => {
         if (p.mouseX < 0 || p.mouseX > p.width || p.mouseY < 0 || p.mouseY > p.height) return;
-        const { vecA, vecB } = stateRef.current;
+        const state = stateRef.current;
+        const entities = getEntities(state);
         const origin = getOrigin();
 
-        const candidates = [
-          { key: "a-tail", pt: toScreen(vecA.tail, origin) },
-          { key: "a-head", pt: toScreen(vecA.head, origin) },
-          { key: "b-tail", pt: toScreen(vecB.tail, origin) },
-          { key: "b-head", pt: toScreen(vecB.head, origin) },
-        ];
+        const candidates = entities.flatMap((e) => [
+          { key: `${e.key}-tail`, pt: toScreen(e.vec.tail, origin) },
+          { key: `${e.key}-head`, pt: toScreen(e.vec.head, origin) },
+        ]);
 
         let closest = null;
         let closestDist = Infinity;
@@ -180,16 +198,20 @@ export default function VectorCanvas({
           return;
         }
 
-        const aTailS = toScreen(vecA.tail, origin);
-        const aHeadS = toScreen(vecA.head, origin);
-        const bTailS = toScreen(vecB.tail, origin);
-        const bHeadS = toScreen(vecB.head, origin);
-        const distA = distToSegment(p.mouseX, p.mouseY, aTailS.x, aTailS.y, aHeadS.x, aHeadS.y);
-        const distB = distToSegment(p.mouseX, p.mouseY, bTailS.x, bTailS.y, bHeadS.x, bHeadS.y);
-        if (distA <= LINE_HIT_R || distB <= LINE_HIT_R) {
-          const key = distA <= distB ? "a-line" : "b-line";
-          const vec = key === "a-line" ? vecA : vecB;
-          dragging = key;
+        let lineKey = null;
+        let lineDist = Infinity;
+        entities.forEach((e) => {
+          const tailS = toScreen(e.vec.tail, origin);
+          const headS = toScreen(e.vec.head, origin);
+          const d = distToSegment(p.mouseX, p.mouseY, tailS.x, tailS.y, headS.x, headS.y);
+          if (d <= LINE_HIT_R && d < lineDist) {
+            lineDist = d;
+            lineKey = e.key;
+          }
+        });
+        if (lineKey) {
+          const vec = entities.find((e) => e.key === lineKey).vec;
+          dragging = `${lineKey}-line`;
           lineDragStart = {
             startWorld: toWorld(p.mouseX, p.mouseY, origin),
             origTail: { ...vec.tail },
@@ -203,7 +225,8 @@ export default function VectorCanvas({
       };
 
       p.mouseDragged = () => {
-        if (dragging === "a-line" || dragging === "b-line") {
+        if (typeof dragging === "string" && dragging.endsWith("-line")) {
+          const key = dragging.slice(0, dragging.length - "-line".length);
           const origin = getOrigin();
           const worldNow = toWorld(p.mouseX, p.mouseY, origin);
           const delta = {
@@ -228,32 +251,25 @@ export default function VectorCanvas({
             x: lineDragStart.origHead.x + actualDelta.x,
             y: lineDragStart.origHead.y + actualDelta.y,
           };
-          const { vecA, vecB, setVecA, setVecB } = stateRef.current;
-          if (dragging === "a-line") {
-            setVecA({ tail: { ...snappedTail, z: vecA.tail.z || 0 }, head: { ...newHead, z: vecA.head.z || 0 } });
-          } else {
-            setVecB({ tail: { ...snappedTail, z: vecB.tail.z || 0 }, head: { ...newHead, z: vecB.head.z || 0 } });
-          }
+          const entity = getEntities(stateRef.current).find((e) => e.key === key);
+          if (!entity) return;
+          entity.setVec({
+            tail: { ...snappedTail, z: entity.vec.tail.z || 0 },
+            head: { ...newHead, z: entity.vec.head.z || 0 },
+          });
           return;
         }
         if (dragging) {
+          const [key, part] = dragging.split("-");
           const origin = getOrigin();
           const world = toWorld(p.mouseX, p.mouseY, origin);
           const snapped = {
             x: Math.round(world.x * 5) / 5,
             y: Math.round(world.y * 5) / 5,
           };
-          const { vecA, vecB, setVecA, setVecB } = stateRef.current;
-
-          if (dragging === "a-tail") {
-            setVecA({ ...vecA, tail: { ...snapped, z: vecA.tail.z || 0 } });
-          } else if (dragging === "a-head") {
-            setVecA({ ...vecA, head: { ...snapped, z: vecA.head.z || 0 } });
-          } else if (dragging === "b-tail") {
-            setVecB({ ...vecB, tail: { ...snapped, z: vecB.tail.z || 0 } });
-          } else if (dragging === "b-head") {
-            setVecB({ ...vecB, head: { ...snapped, z: vecB.head.z || 0 } });
-          }
+          const entity = getEntities(stateRef.current).find((e) => e.key === key);
+          if (!entity) return;
+          entity.setVec({ ...entity.vec, [part]: { ...snapped, z: entity.vec[part].z || 0 } });
           return;
         }
         if (panning) {
@@ -300,6 +316,17 @@ function drawAxes(p, ox, oy, w, h, colors) {
   p.strokeWeight(1.5);
   p.line(0, oy, w, oy);
   p.line(ox, 0, ox, h);
+
+  p.push();
+  p.noStroke();
+  p.fill(colors.dim);
+  p.textFont("'JetBrains Mono', monospace");
+  p.textSize(14);
+  p.textAlign(p.RIGHT, p.BOTTOM);
+  p.text("x", w - 6, oy - 6);
+  p.textAlign(p.LEFT, p.TOP);
+  p.text("y", ox + 6, 6);
+  p.pop();
 }
 
 function drawVectorArrow(p, ox, oy, tip, colorHex, label) {
@@ -441,11 +468,31 @@ function drawCrossMode(p, vecA, vecB, aS, bS, ox, oy, colors, crossShape) {
   p.pop();
 }
 
-function drawAdditionMode(p, vecA, vecB, aS, bS, ox, oy, colors) {
-  const result = add(vecA, vecB);
+function drawAdditionMode(p, entities, ox, oy, colors) {
+  const comps = entities.map((e) => components(e.vec));
+  const result = comps.reduce((acc, c) => add(acc, c), { x: 0, y: 0, z: 0 });
   const resultS = { x: ox + result.x * UNIT, y: oy - result.y * UNIT };
-  drawDashedLine(p, aS, resultS, colors.vecB);
-  drawDashedLine(p, bS, resultS, colors.vecA);
+  const sumLabel = entities.map((e) => e.label).join("+");
+  const sumLabelSpaced = entities.map((e) => e.label).join(" + ");
+
+  if (entities.length === 2) {
+    // exactly a and b (the default) — keep the original parallelogram-style
+    // construction: two dashed edges, one a translated copy of each vector.
+    const [aComp, bComp] = comps;
+    const aS = { x: ox + aComp.x * UNIT, y: oy - aComp.y * UNIT };
+    const bS = { x: ox + bComp.x * UNIT, y: oy - bComp.y * UNIT };
+    drawDashedLine(p, aS, resultS, colors.vecB);
+    drawDashedLine(p, bS, resultS, colors.vecA);
+  } else {
+    // 3+ vectors: a simple tip-to-tail chain — a's real arrow is the first
+    // leg, then each extra vector continues as a dashed translated copy.
+    let elbow = { x: ox + comps[0].x * UNIT, y: oy - comps[0].y * UNIT };
+    for (let i = 1; i < comps.length; i++) {
+      const next = { x: elbow.x + comps[i].x * UNIT, y: elbow.y - comps[i].y * UNIT };
+      drawDashedLine(p, elbow, next, entities[i].color);
+      elbow = next;
+    }
+  }
 
   p.push();
   p.stroke(colors.result);
@@ -465,7 +512,7 @@ function drawAdditionMode(p, vecA, vecB, aS, bS, ox, oy, colors) {
   p.fill(colors.result);
   p.textFont("Caveat, cursive");
   p.textSize(24);
-  p.text("a+b", resultS.x + 12, resultS.y - 8);
+  p.text(sumLabel, resultS.x + 12, resultS.y - 8);
   p.pop();
 
   p.push();
@@ -475,13 +522,13 @@ function drawAdditionMode(p, vecA, vecB, aS, bS, ox, oy, colors) {
   p.textSize(16);
   p.textAlign(p.LEFT, p.TOP);
   p.text(
-    `a + b = ${result.x.toFixed(2)}i + ${result.y.toFixed(2)}j + ${result.z.toFixed(2)}k`,
+    `${sumLabelSpaced} = ${result.x.toFixed(2)}i + ${result.y.toFixed(2)}j + ${result.z.toFixed(2)}k`,
     14,
     14
   );
   p.fill(colors.dim);
   p.textSize(13);
-  p.text(`|a + b| = ${magnitude(result).toFixed(2)}`, 14, 38);
+  p.text(`|${sumLabel}| = ${magnitude(result).toFixed(2)}`, 14, 38);
   p.pop();
 }
 

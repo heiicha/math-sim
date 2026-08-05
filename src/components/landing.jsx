@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { navigateWithTransition } from "../viewTransitionNavigate.js";
 import "./landing.css";
 
 export default function LandingPage() {
@@ -29,7 +30,7 @@ export default function LandingPage() {
         <p className="landing-tagline">
           An open-source math project
         </p>
-        <button className="landing-start" onClick={() => navigate("/topics")}>
+        <button className="landing-start" onClick={() => navigateWithTransition(navigate, "/topics")}>
           START
         </button>
       </main>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import TransitionLink from "./TransitionLink";
 import ControlPanel3D from "./vector3dcomponents/ControlPanel3D";
 import Scene3D from "./vector3dcomponents/Scene3D";
 import ReadoutPanel3D from "./vector3dcomponents/ReadoutPanel3D";
@@ -58,9 +58,24 @@ function Vectors2() {
 
   const [line1, setLine1] = useState({ point: { x: 0, y: 0, z: 0 }, direction: { x: 1, y: 1, z: 1 } });
   const [line2, setLine2] = useState({ point: { x: 2, y: 0, z: -1 }, direction: { x: 1, y: -1, z: 2 } });
+  // line3/line4: optional extra lines for Line & Line, added via the
+  // "+ Add Line" button (up to 2 on top of the default line1/line2).
+  const [line3, setLine3] = useState(null);
+  const [line4, setLine4] = useState(null);
 
   const [plane1, setPlane1] = useState({ point: { x: 0, y: 0, z: 4 }, normal: { x: 0, y: 0, z: 1 } });
   const [plane2, setPlane2] = useState({ point: { x: 0, y: 0, z: 0 }, normal: { x: 1, y: 1, z: 0 } });
+  // plane3/plane4: same idea for Plane & Plane.
+  const [plane3, setPlane3] = useState(null);
+  const [plane4, setPlane4] = useState(null);
+
+  // Line & Plane's extras are a shared pool of up to 2 slots, each either an
+  // extra line or an extra plane — four nullable named slots, but
+  // ControlPanel3D enforces a combined cap of 2 filled at once.
+  const [lpLine1, setLpLine1] = useState(null);
+  const [lpLine2, setLpLine2] = useState(null);
+  const [lpPlane1, setLpPlane1] = useState(null);
+  const [lpPlane2, setLpPlane2] = useState(null);
 
   const [point1, setPoint1] = useState({ x: 3, y: 3, z: 3 });
 
@@ -76,9 +91,9 @@ function Vectors2() {
         <h1 className="topic-header">Vectors II</h1>
         <h1>{MODES[mode].label}</h1>
         <p className="tagline">{MODES[mode].tagline}</p>
-        <Link to="/vectors1" className="page-nav-link">
+        <TransitionLink to="/vectors1" className="page-nav-link">
           ← Vectors I — dot, cross, projection in 2D
-        </Link>
+        </TransitionLink>
       </header>
 
       <main className="layout">
@@ -89,10 +104,26 @@ function Vectors2() {
             setLine1={setLine1}
             line2={line2}
             setLine2={setLine2}
+            line3={line3}
+            setLine3={setLine3}
+            line4={line4}
+            setLine4={setLine4}
             plane1={plane1}
             setPlane1={setPlane1}
             plane2={plane2}
             setPlane2={setPlane2}
+            plane3={plane3}
+            setPlane3={setPlane3}
+            plane4={plane4}
+            setPlane4={setPlane4}
+            lpLine1={lpLine1}
+            setLpLine1={setLpLine1}
+            lpLine2={lpLine2}
+            setLpLine2={setLpLine2}
+            lpPlane1={lpPlane1}
+            setLpPlane1={setLpPlane1}
+            lpPlane2={lpPlane2}
+            setLpPlane2={setLpPlane2}
             point1={point1}
             setPoint1={setPoint1}
             planePlaneView={planePlaneView}
@@ -114,10 +145,26 @@ function Vectors2() {
               setLine1={setLine1}
               line2={line2}
               setLine2={setLine2}
+              line3={line3}
+              setLine3={setLine3}
+              line4={line4}
+              setLine4={setLine4}
               plane1={plane1}
               setPlane1={setPlane1}
               plane2={plane2}
               setPlane2={setPlane2}
+              plane3={plane3}
+              setPlane3={setPlane3}
+              plane4={plane4}
+              setPlane4={setPlane4}
+              lpLine1={lpLine1}
+              setLpLine1={setLpLine1}
+              lpLine2={lpLine2}
+              setLpLine2={setLpLine2}
+              lpPlane1={lpPlane1}
+              setLpPlane1={setLpPlane1}
+              lpPlane2={lpPlane2}
+              setLpPlane2={setLpPlane2}
               point1={point1}
               setPoint1={setPoint1}
               planePlaneView={planePlaneView}
@@ -162,8 +209,16 @@ function Vectors2() {
           mode={mode}
           line1={line1}
           line2={line2}
+          line3={line3}
+          line4={line4}
           plane1={plane1}
           plane2={plane2}
+          plane3={plane3}
+          plane4={plane4}
+          lpLine1={lpLine1}
+          lpLine2={lpLine2}
+          lpPlane1={lpPlane1}
+          lpPlane2={lpPlane2}
           point1={point1}
           planePlaneView={planePlaneView}
           linePlaneView={linePlaneView}

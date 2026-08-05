@@ -9,6 +9,8 @@
   --text-dim: #3a3a3a;
   --vec-a: #E96B6A;
   --vec-b: #6990E4 ;
+  --vec-c: #5FAE6B;
+  --vec-d: #E0A23D;
   --result: #996ae9;
   --accent: #2B63DA;
   --margin-rule: #858585;
@@ -57,4 +59,20 @@ button:focus-visible,
 [tabindex]:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* Route-change cross-fade, driven by document.startViewTransition() in
+   viewTransitionNavigate.js (see TransitionLink / navigateWithTransition).
+   Browsers without View Transitions support just navigate instantly. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.22s;
+  animation-timing-function: ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
 }

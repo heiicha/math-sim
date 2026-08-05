@@ -73,22 +73,30 @@ function CrossReadout({ vecA, vecB, crossShape }) {
   );
 }
 
-function AdditionReadout({ vecA, vecB }) {
-  const result = add(vecA, vecB);
+const SUBSCRIPTS = ["₁", "₂", "₃"];
+const IJK = ["i", "j", "k"];
+
+function AdditionReadout({ vectors }) {
+  const result = vectors.reduce((acc, v) => add(acc, v.vector), { x: 0, y: 0, z: 0 });
+  const sumLabel = vectors.map((v) => v.label).join(" + ");
+  const formula =
+    `${sumLabel} = ` +
+    SUBSCRIPTS.map((sub, i) => `(${vectors.map((v) => v.label + sub).join("+")})${IJK[i]}`).join(" + ");
+
   return (
     <>
-      <p className="formula">a + b = (a₁+b₁)i + (a₂+b₂)j + (a₃+b₃)k</p>
+      <p className="formula">{formula}</p>
       <div className="result-row">
-        <span>a + b</span>
+        <span>{sumLabel}</span>
         <strong>{toIJK(result)}</strong>
       </div>
       <div className="result-row">
-        <span>|a + b|</span>
+        <span>|{sumLabel}|</span>
         <strong>{magnitude(result).toFixed(2)}</strong>
       </div>
       <p className="note">
-        By the Triangle Law of Vector Addition, a + b is found tip-to-tail: walk along a, then
-        from there walk along b — the resultant is the vector straight from the start to the end.
+        By the Triangle Law of Vector Addition, {sumLabel} is found tip-to-tail: walk along each
+        vector in turn — the resultant is the vector straight from the start to the end.
       </p>
     </>
   );
@@ -146,13 +154,20 @@ function RatioReadout({ pointA, pointB, ratio }) {
   );
 }
 
-export default function ReadoutPanel({ mode, vecA, vecB, pointA, pointB, crossShape, ratio }) {
+export default function ReadoutPanel({ mode, vecA, vecB, vecC, vecD, pointA, pointB, crossShape, ratio }) {
+  const additionVectors = [
+    { label: "a", vector: vecA },
+    { label: "b", vector: vecB },
+    ...(vecC ? [{ label: "c", vector: vecC }] : []),
+    ...(vecD ? [{ label: "d", vector: vecD }] : []),
+  ];
+
   return (
     <aside className="panel readout-panel">
       <p className="readout-eyebrow">Results</p>
       {mode === "dot" && <DotReadout vecA={vecA} vecB={vecB} />}
       {mode === "cross" && <CrossReadout vecA={vecA} vecB={vecB} crossShape={crossShape} />}
-      {mode === "addition" && <AdditionReadout vecA={vecA} vecB={vecB} />}
+      {mode === "addition" && <AdditionReadout vectors={additionVectors} />}
       {mode === "projection" && <ProjectionReadout vecA={vecA} vecB={vecB} />}
       {mode === "ratio" && <RatioReadout pointA={pointA} pointB={pointB} ratio={ratio} />}
 
@@ -166,6 +181,18 @@ export default function ReadoutPanel({ mode, vecA, vecB, pointA, pointB, crossSh
             <span>|b|</span>
             <strong>{magnitude(vecB).toFixed(2)}</strong>
           </div>
+          {mode === "addition" && vecC && (
+            <div className="result-row">
+              <span>|c|</span>
+              <strong>{magnitude(vecC).toFixed(2)}</strong>
+            </div>
+          )}
+          {mode === "addition" && vecD && (
+            <div className="result-row">
+              <span>|d|</span>
+              <strong>{magnitude(vecD).toFixed(2)}</strong>
+            </div>
+          )}
         </div>
       )}
     </aside>

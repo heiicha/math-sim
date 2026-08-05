@@ -1,4 +1,5 @@
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import TransitionLink from "./TransitionLink";
 import "./feedback.css";
 
 export default function HomeButton() {
@@ -6,8 +7,8 @@ export default function HomeButton() {
   if (location.pathname === "/") return null;
 
   return (
-    <Link to="/">
+    <TransitionLink to="/">
       <button className="feedback-button">Home</button>
-    </Link>
+    </TransitionLink>
   );
 }
