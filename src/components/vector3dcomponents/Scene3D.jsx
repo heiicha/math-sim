@@ -7,6 +7,10 @@ import {
   planePlaneRelationship,
   reflectLineAcrossPlane,
   reflectPlaneAcrossPlane,
+  reflectPointAcrossPlane,
+  reflectPointAcrossLine,
+  footOfPerpendicularToLine,
+  footOfPerpendicularToPlane,
   spanningVectors,
   subtract,
   closestPointsOnSkewLines,
@@ -16,6 +20,8 @@ import "./Scene3D.css";
 
 const LINE_REACH = 7; // how far each drawn line extends past its defining point
 const PLANE_SIZE = 7; // side length of the finite plane patch we draw
+const LINE_MARGIN = 1.5; // extra length drawn past a target point (e.g. an intersection)
+const PLANE_MARGIN = 1.2; // extra half-size drawn past a target point's in-plane projection
 
 function readColors() {
   const style = getComputedStyle(document.documentElement);
@@ -52,11 +58,11 @@ function clearGroup(group) {
   }
 }
 
-function addInfiniteLine(group, line, colorHex, opacity = 1, dashed = false) {
+function addInfiniteLine(group, line, colorHex, opacity = 1, dashed = false, reach = LINE_REACH) {
   const p = toThree(line.point);
   const d = toThree(line.direction).normalize();
-  const a = p.clone().addScaledVector(d, -LINE_REACH);
-  const b = p.clone().addScaledVector(d, LINE_REACH);
+  const a = p.clone().addScaledVector(d, -reach);
+  const b = p.clone().addScaledVector(d, reach);
   const geometry = new THREE.BufferGeometry().setFromPoints([a, b]);
   const material = dashed
     ? new THREE.LineDashedMaterial({ color: colorHex, dashSize: 0.25, gapSize: 0.18, transparent: opacity < 1, opacity })
@@ -128,12 +134,11 @@ function addDraggableArrow(group, origin, direction, colorHex, length, entity, f
   addHandle(group, tip, "direction", entity, field, { origin });
 }
 
-function addPlane(group, plane, colorHex, opacity = 0.28) {
-  const { b, c } = spanningVectors(plane.normal);
+function addPlane(group, plane, colorHex, opacity = 0.28, half = PLANE_SIZE / 2) {
+  const { m1: b, m2: c } = spanningVectors(plane.normal);
   const p = toThree(plane.point);
   const bT = toThree(b);
   const cT = toThree(c);
-  const half = PLANE_SIZE / 2;
 
   const corners = [
     p.clone().addScaledVector(bT, -half).addScaledVector(cT, -half),
@@ -164,6 +169,40 @@ function addPlane(group, plane, colorHex, opacity = 0.28) {
   group.add(new THREE.Line(edgeGeom, edgeMat));
 
   return mesh;
+}
+
+// How far a drawn line needs to reach (symmetrically, in both directions)
+// so it still covers every point in `targets` — e.g. a computed
+// intersection — with a bit of margin, instead of always stopping at the
+// same fixed length regardless of where that point actually falls.
+function lineReachFor(line, targets) {
+  let reach = LINE_REACH;
+  if (!targets.length) return reach;
+  const d = toThree(line.direction);
+  if (d.lengthSq() < 1e-9) return reach;
+  d.normalize();
+  const p = toThree(line.point);
+  for (const target of targets) {
+    const t = toThree(target).sub(p).dot(d);
+    reach = Math.max(reach, Math.abs(t) + LINE_MARGIN);
+  }
+  return reach;
+}
+
+// How large a drawn plane patch's half-size needs to be, in the plane's own
+// (b, c) basis, so it still contains every point in `targets`.
+function planeHalfFor(plane, targets) {
+  let half = PLANE_SIZE / 2;
+  if (!targets.length) return half;
+  const { m1: b, m2: c } = spanningVectors(plane.normal);
+  const bT = toThree(b);
+  const cT = toThree(c);
+  const p = toThree(plane.point);
+  for (const target of targets) {
+    const rel = toThree(target).sub(p);
+    half = Math.max(half, Math.abs(rel.dot(bT)) + PLANE_MARGIN, Math.abs(rel.dot(cT)) + PLANE_MARGIN);
+  }
+  return half;
 }
 
 // The parallelogram spanned by two vectors anchored at a point — used for
@@ -255,9 +294,13 @@ export default function Scene3D({
   setPlane1,
   plane2,
   setPlane2,
+  point1,
+  setPoint1,
   planePlaneView,
   linePlaneView,
   lineLineView,
+  pointLineView,
+  pointPlaneView,
 }) {
   const containerRef = useRef(null);
   const stateRef = useRef({
@@ -270,9 +313,13 @@ export default function Scene3D({
     setPlane1,
     plane2,
     setPlane2,
+    point1,
+    setPoint1,
     planePlaneView,
     linePlaneView,
     lineLineView,
+    pointLineView,
+    pointPlaneView,
   });
   stateRef.current = {
     mode,
@@ -284,9 +331,13 @@ export default function Scene3D({
     setPlane1,
     plane2,
     setPlane2,
+    point1,
+    setPoint1,
     planePlaneView,
     linePlaneView,
     lineLineView,
+    pointLineView,
+    pointPlaneView,
   };
 
   const rendererRef = useRef(null);
@@ -352,6 +403,10 @@ export default function Scene3D({
 
     function applyDrag({ entity, field, origin }, worldHit) {
       const s = stateRef.current;
+      if (entity === "point1") {
+        s.setPoint1(snap(threeToMath(worldHit)));
+        return;
+      }
       const setters = {
         line1: s.setLine1,
         line2: s.setLine2,
@@ -454,7 +509,19 @@ export default function Scene3D({
     if (!group) return;
     clearGroup(group);
     const colors = readColors();
-    const { mode, line1, line2, plane1, plane2, planePlaneView, linePlaneView, lineLineView } = stateRef.current;
+    const {
+      mode,
+      line1,
+      line2,
+      plane1,
+      plane2,
+      point1,
+      planePlaneView,
+      linePlaneView,
+      lineLineView,
+      pointLineView,
+      pointPlaneView,
+    } = stateRef.current;
 
     if (mode === "lineForms") {
       addInfiniteLine(group, line1, colors.entity1);
@@ -465,11 +532,14 @@ export default function Scene3D({
       addDraggablePoint(group, plane1.point, colors.entity1, 0.13, "plane1", "point");
       addDraggableArrow(group, plane1.point, plane1.normal, colors.entity1, 2, "plane1", "normal");
     } else if (mode === "linePlane") {
-      addPlane(group, plane1, colors.entity2, 0.22);
+      const rel = linePlaneRelationship(line1, plane1);
+      const hits = rel.type === "intersecting" ? [rel.point] : [];
+
+      addPlane(group, plane1, colors.entity2, 0.22, planeHalfFor(plane1, hits));
       addDraggablePoint(group, plane1.point, colors.entity2, 0.11, "plane1", "point");
       addDraggableArrow(group, plane1.point, plane1.normal, colors.entity2, 1.8, "plane1", "normal");
 
-      addInfiniteLine(group, line1, colors.entity1);
+      addInfiniteLine(group, line1, colors.entity1, 1, false, lineReachFor(line1, hits));
       addDraggablePoint(group, line1.point, colors.entity1, 0.13, "line1", "point");
       addDraggableArrow(group, line1.point, line1.direction, colors.entity1, 1.6, "line1", "direction");
 
@@ -478,21 +548,36 @@ export default function Scene3D({
         addInfiniteLine(group, reflected, colors.result, 1, false);
         addPoint(group, reflected.point, colors.result, 0.13);
         addArrow(group, reflected.point, reflected.direction, colors.result, 1.6);
-      } else {
-        const rel = linePlaneRelationship(line1, plane1);
-        if (rel.type === "intersecting") {
-          addPoint(group, rel.point, colors.result, 0.16);
-          // angle between the line and its own shadow on the plane
-          const shadow = perpendicularComponent(line1.direction, plane1.normal);
-          addAngleArc(group, toThree(rel.point), toThree(line1.direction), toThree(shadow), rel.angleDeg, colors.result);
-        }
+      } else if (rel.type === "intersecting") {
+        addPoint(group, rel.point, colors.result, 0.16);
+        // angle between the line and its own shadow on the plane
+        const shadow = perpendicularComponent(line1.direction, plane1.normal);
+        addAngleArc(group, toThree(rel.point), toThree(line1.direction), toThree(shadow), rel.angleDeg, colors.result);
       }
     } else if (mode === "lineLine") {
-      addInfiniteLine(group, line1, colors.entity1);
+      const rel = lineLineRelationship(line1, line2);
+      const isRelationshipView = lineLineView !== "addition" && lineLineView !== "cross";
+      let closest = null;
+      let hits1 = [];
+      let hits2 = [];
+      if (isRelationshipView) {
+        if (rel.type === "intersecting") {
+          hits1 = [rel.point];
+          hits2 = [rel.point];
+        } else if (rel.type === "skew") {
+          closest = closestPointsOnSkewLines(line1, line2);
+          if (closest) {
+            hits1 = [closest.P1];
+            hits2 = [closest.P2];
+          }
+        }
+      }
+
+      addInfiniteLine(group, line1, colors.entity1, 1, false, lineReachFor(line1, hits1));
       addDraggablePoint(group, line1.point, colors.entity1, 0.13, "line1", "point");
       addDraggableArrow(group, line1.point, line1.direction, colors.entity1, 1.6, "line1", "direction");
 
-      addInfiniteLine(group, line2, colors.entity2);
+      addInfiniteLine(group, line2, colors.entity2, 1, false, lineReachFor(line2, hits2));
       addDraggablePoint(group, line2.point, colors.entity2, 0.13, "line2", "point");
       addDraggableArrow(group, line2.point, line2.direction, colors.entity2, 1.6, "line2", "direction");
 
@@ -512,9 +597,8 @@ export default function Scene3D({
         const anchor = line1.point;
         addParallelogram(group, anchor, line1.direction, line2.direction, colors.result);
         const cross = crossProduct(line1.direction, line2.direction);
-        addArrow(group, anchor, cross, colors.accent, 1.8);
+        addArrow(group, anchor, cross, colors.result, 1.6);
       } else {
-        const rel = lineLineRelationship(line1, line2);
         // arcs use the acute-side direction for line2, matching angleDeg's
         // acos(|dot|/...) — flip d2 when the raw dot product is negative.
         const d2Acute = dot(line1.direction, line2.direction) >= 0
@@ -525,7 +609,6 @@ export default function Scene3D({
           addPoint(group, rel.point, colors.result, 0.16);
           addAngleArc(group, toThree(rel.point), toThree(line1.direction), toThree(d2Acute), rel.angleDeg, colors.result);
         } else if (rel.type === "skew") {
-          const closest = closestPointsOnSkewLines(line1, line2);
           if (closest) {
             const { P1, P2 } = closest;
             addPoint(group, P1, colors.result, 0.1);
@@ -537,15 +620,35 @@ export default function Scene3D({
         }
       }
     } else if (mode === "planePlane") {
-      addPlane(group, plane1, colors.entity1);
+      const rel = planePlaneRelationship(plane1, plane2);
+
+      // For the angle view, size both plane patches (and the drawn
+      // intersection line) around the point on that line closest to each
+      // plane's own defining point, so the patches visibly meet along it
+      // instead of the line passing outside their fixed-size quads.
+      let hits1 = [];
+      let hits2 = [];
+      let lineHits = [];
+      if (planePlaneView === "angle" && rel.type === "intersecting") {
+        const footOnLine = (point) => {
+          const p = toThree(rel.line.point);
+          const d = toThree(rel.line.direction).normalize();
+          const t = toThree(point).sub(p).dot(d);
+          const footThree = p.clone().addScaledVector(d, t);
+          return { x: footThree.x, y: footThree.z, z: footThree.y };
+        };
+        hits1 = [footOnLine(plane1.point)];
+        hits2 = [footOnLine(plane2.point)];
+        lineHits = [...hits1, ...hits2];
+      }
+
+      addPlane(group, plane1, colors.entity1, 0.28, planeHalfFor(plane1, hits1));
       addDraggablePoint(group, plane1.point, colors.entity1, 0.11, "plane1", "point");
       addDraggableArrow(group, plane1.point, plane1.normal, colors.entity1, 1.8, "plane1", "normal");
 
-      addPlane(group, plane2, colors.entity2);
+      addPlane(group, plane2, colors.entity2, 0.28, planeHalfFor(plane2, hits2));
       addDraggablePoint(group, plane2.point, colors.entity2, 0.11, "plane2", "point");
       addDraggableArrow(group, plane2.point, plane2.normal, colors.entity2, 1.8, "plane2", "normal");
-
-      const rel = planePlaneRelationship(plane1, plane2);
 
       if (planePlaneView === "reflection") {
         const reflected = reflectPlaneAcrossPlane(plane2, plane1);
@@ -554,7 +657,7 @@ export default function Scene3D({
         addArrow(group, reflected.point, reflected.normal, colors.result, 1.8);
       } else if (planePlaneView === "angle") {
         if (rel.type === "intersecting") {
-          addInfiniteLine(group, rel.line, colors.result, 1, false);
+          addInfiniteLine(group, rel.line, colors.result, 1, false, lineReachFor(rel.line, lineHits));
           const n2Acute = dot(plane1.normal, plane2.normal) >= 0
             ? plane2.normal
             : { x: -plane2.normal.x, y: -plane2.normal.y, z: -(plane2.normal.z || 0) };
@@ -577,6 +680,43 @@ export default function Scene3D({
           addSegment(group, plane1.point, foot, colors.result);
         }
         // intersecting: distance is 0 — nothing meaningful to draw
+      }
+    } else if (mode === "pointLine") {
+      addInfiniteLine(group, line1, colors.entity2, 1, false, lineReachFor(line1, [point1]));
+      addDraggablePoint(group, line1.point, colors.entity2, 0.13, "line1", "point");
+      addDraggableArrow(group, line1.point, line1.direction, colors.entity2, 1.6, "line1", "direction");
+
+      addDraggablePoint(group, point1, colors.entity1, 0.13, "point1", "position");
+
+      const foot = footOfPerpendicularToLine(point1, line1);
+      if (foot) {
+        addPoint(group, foot, colors.result, 0.1);
+        addSegment(group, point1, foot, colors.result);
+
+        if (pointLineView === "reflection") {
+          const reflected = reflectPointAcrossLine(point1, line1);
+          addPoint(group, reflected, colors.result, 0.13);
+          addSegment(group, foot, reflected, colors.result);
+        }
+      }
+    } else if (mode === "pointPlane") {
+      const hits = [point1];
+      addPlane(group, plane1, colors.entity2, 0.22, planeHalfFor(plane1, hits));
+      addDraggablePoint(group, plane1.point, colors.entity2, 0.11, "plane1", "point");
+      addDraggableArrow(group, plane1.point, plane1.normal, colors.entity2, 1.8, "plane1", "normal");
+
+      addDraggablePoint(group, point1, colors.entity1, 0.13, "point1", "position");
+
+      const foot = footOfPerpendicularToPlane(point1, plane1);
+      if (foot) {
+        addPoint(group, foot, colors.result, 0.1);
+        addSegment(group, point1, foot, colors.result);
+
+        if (pointPlaneView === "reflection") {
+          const reflected = reflectPointAcrossPlane(point1, plane1);
+          addPoint(group, reflected, colors.result, 0.13);
+          addSegment(group, foot, reflected, colors.result);
+        }
       }
     }
   });

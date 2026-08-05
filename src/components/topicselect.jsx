@@ -7,14 +7,14 @@ const TOPICS = [
     path: "/vectors1",
     label: "Vectors I",
     color: "var(--vec-a)",
-    description: "2D vectors (Vectors I)",
+    description: "Addition, dot product, cross product, ratio theorem",
   },
   {
     key: "vectors2",
     path: "/vectors2",
     label: "Vectors II",
     color: "var(--vec-b)",
-    description: "3D vectors (Vectors II)",
+    description: "Relationships for line-line, line-plane, and line-plane",
   },
 ];
 

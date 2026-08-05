@@ -86,12 +86,12 @@ function RatioInputs({ ratio, setRatio }) {
     <div className="ratio-inputs">
       <p className="ratio-label">AP : PB</p>
       <div className="ratio-fields">
-        <input type="number" value={ratio.m} onChange={update("m")} step="1" aria-label="m" />
+        <input type="number" value={ratio.lambda} onChange={update("lambda")} step="1" aria-label="λ" />
         <span>:</span>
-        <input type="number" value={ratio.n} onChange={update("n")} step="1" aria-label="n" />
+        <input type="number" value={ratio.mu} onChange={update("mu")} step="1" aria-label="μ" />
       </div>
       <p className="ratio-hint">
-        P divides segment AB (from a's and b's heads) so that AP : PB = m : n.
+        P divides segment AB (from a's and b's heads) so that AP : PB = λ : μ.
       </p>
     </div>
   );

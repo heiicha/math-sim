@@ -4,11 +4,15 @@ import {
   planePlaneRelationship,
   reflectLineAcrossPlane,
   reflectPlaneAcrossPlane,
+  reflectPointAcrossPlane,
+  reflectPointAcrossLine,
+  pointLineRelationship,
+  pointPlaneRelationship,
   spanningVectors,
   cartesianLineParts,
   cartesianPlaneEquation,
 } from "./geometry3D.js";
-import { dot, add, crossProduct, magnitude, toIJK } from "../vectorcomponents/vectorMath.js";
+import { dot, add, crossProduct, magnitude } from "../vectorcomponents/vectorMath.js";
 import "../vectorcomponents/ReadoutPanel.css";
 import "./ReadoutPanel3D.css";
 
@@ -49,16 +53,16 @@ function LineEquation({ pointA, direction, symbol = "r" }) {
   );
 }
 
-function PlaneVectorEquation({ pointA, b, c }) {
+function PlaneVectorEquation({ pointA, m1, m2 }) {
   return (
     <div className="line-equation">
       <span className="line-eq-symbol">r</span>
       <span className="line-eq-symbol">=</span>
       <ColumnVector x={pointA.x} y={pointA.y} z={pointA.z} />
       <span className="line-eq-symbol">+ λ</span>
-      <ColumnVector x={b.x} y={b.y} z={b.z} />
+      <ColumnVector x={m1.x} y={m1.y} z={m1.z} />
       <span className="line-eq-symbol">+ μ</span>
-      <ColumnVector x={c.x} y={c.y} z={c.z} />
+      <ColumnVector x={m2.x} y={m2.y} z={m2.z} />
     </div>
   );
 }
@@ -122,8 +126,12 @@ function formatCartesianPlane(plane) {
   return `${out} = ${d.toFixed(2)}`;
 }
 
+// "contained" is our internal relationship-type key; the notes phrase this
+// case as the line "lying on" the plane, so that's what the badge shows.
+const BADGE_LABEL = { contained: "lies on plane" };
+
 function Badge({ type }) {
-  return <span className={`relation-badge relation-${type}`}>{type}</span>;
+  return <span className={`relation-badge relation-${type}`}>{BADGE_LABEL[type] ?? type}</span>;
 }
 
 // ---- per-mode readouts ------------------------------------------------
@@ -134,11 +142,12 @@ function LineFormsReadout({ line }) {
       <p className="formula">Vector equation</p>
       <LineEquation pointA={line.point} direction={line.direction} />
       <p className="note" style={{ marginTop: 0 }}>
-        a is any point on the line, d is the direction it runs in, and λ is any real number.
+        a is any point on the line, m is the direction it runs in (commonly known as a direction
+        vector of the line), and λ is any real number.
       </p>
 
       <p className="formula" style={{ marginTop: 18 }}>
-        Cartesian (symmetric) equation
+        Cartesian equation
       </p>
       <SymmetricLineEquation line={line} />
     </>
@@ -146,14 +155,14 @@ function LineFormsReadout({ line }) {
 }
 
 function PlaneFormsReadout({ plane }) {
-  const { b, c } = spanningVectors(plane.normal);
+  const { m1, m2 } = spanningVectors(plane.normal);
   const d = dot(plane.normal, plane.point);
   return (
     <>
-      <p className="formula">Vector equation (point-normal form)</p>
+      <p className="formula">Vector equation (scalar-product form)</p>
       <p className="formula formula-sub">r · n = a · n</p>
       <div className="result-row">
-        <span>r · n</span>
+        <span>D (= a · n)</span>
         <strong>{fmt(d)}</strong>
       </div>
       <VectorRow label="n (normal)" vector={plane.normal} />
@@ -164,12 +173,12 @@ function PlaneFormsReadout({ plane }) {
       <p className="cartesian-eq">{formatCartesianPlane(plane)}</p>
 
       <p className="formula" style={{ marginTop: 18 }}>
-        Parametric vector equation
+        Vector equation (parametric form)
       </p>
-      <PlaneVectorEquation pointA={plane.point} b={b} c={c} />
+      <PlaneVectorEquation pointA={plane.point} m1={m1} m2={m2} />
       <p className="note">
-        b and c are any two independent vectors that lie in the plane (perpendicular to n) —
-        together with point a, every point on the plane is reachable by some λ, μ.
+        m₁ and m₂ are two vectors that are both parallel to the plane but not parallel to each
+        other — together with point a, every point on the plane is reachable by some λ, μ.
       </p>
     </>
   );
@@ -186,7 +195,7 @@ function LinePlaneReadout({ line, plane, view }) {
         <LineEquation pointA={reflected.point} direction={reflected.direction} symbol="r′" />
         <p className="note">
           The point reflects the usual way (twice the signed distance to the plane, along the
-          normal); the direction reflects too, since it's a free vector — d′ = d − 2·(d·n / n·n)·n.
+          normal); the direction reflects too, since it's a free vector — m′ = m − 2·(m·n / n·n)·n.
         </p>
       </>
     );
@@ -208,9 +217,9 @@ function LinePlaneReadout({ line, plane, view }) {
             <strong>{rel.angleDeg.toFixed(1)}°</strong>
           </div>
           <p className="note">
-            The line pierces the plane at exactly one point, since d · n ≠ 0. That angle is
+            The line pierces the plane at exactly one point, since m · n ≠ 0. That angle is
             measured between the line and its own shadow on the plane — 90° minus the angle
-            between d and n.
+            between m and n.
           </p>
         </>
       )}
@@ -222,7 +231,7 @@ function LinePlaneReadout({ line, plane, view }) {
             <strong>{rel.distance.toFixed(2)}</strong>
           </div>
           <p className="note">
-            d · n = 0, so the line never tilts toward the plane — and the line's point doesn't
+            m · n = 0, so the line never tilts toward the plane — and the line's point doesn't
             satisfy the plane's equation, so it sits at a constant distance away, never meeting
             it.
           </p>
@@ -231,7 +240,7 @@ function LinePlaneReadout({ line, plane, view }) {
 
       {rel.type === "contained" && (
         <p className="note">
-          d · n = 0 (the line runs parallel to the plane's surface) and the line's point also
+          m · n = 0 (the line runs parallel to the plane's surface) and the line's point also
           satisfies the plane's equation — so every point on the line lies in the plane.
         </p>
       )}
@@ -244,17 +253,17 @@ function LineLineReadout({ line1, line2, view }) {
     const sum = add(line1.direction, line2.direction);
     return (
       <>
-        <p className="formula">d₁ + d₂</p>
-        <VectorRow label="d₁" vector={line1.direction} />
-        <VectorRow label="d₂" vector={line2.direction} />
-        <VectorRow label="d₁ + d₂" vector={sum} />
+        <p className="formula">m₁ + m₂</p>
+        <VectorRow label="m₁" vector={line1.direction} />
+        <VectorRow label="m₂" vector={line2.direction} />
+        <VectorRow label="m₁ + m₂" vector={sum} />
         <div className="result-row">
-          <span>|d₁ + d₂|</span>
+          <span>|m₁ + m₂|</span>
           <strong>{fmt(magnitude(sum))}</strong>
         </div>
         <p className="note">
-          Tip-to-tail from line 1's point: walk along d₁, then from there walk along d₂ — you land
-          in the same place as walking straight along d₁ + d₂.
+          Tip-to-tail from line 1's point: walk along m₁, then from there walk along m₂ — you land
+          in the same place as walking straight along m₁ + m₂.
         </p>
       </>
     );
@@ -264,18 +273,15 @@ function LineLineReadout({ line1, line2, view }) {
     const cross = crossProduct(line1.direction, line2.direction);
     return (
       <>
-        <p className="formula">d₁ × d₂</p>
-        <div className="result-row">
-          <span>d₁ × d₂</span>
-          <strong>{toIJK(cross)}</strong>
-        </div>
+        <p className="formula">m₁ × m₂</p>
+        <VectorRow label="m₁ × m₂" vector={cross} />
         <div className="result-row">
           <span>Area of the spanned parallelogram</span>
           <strong>{fmt(magnitude(cross))}</strong>
         </div>
         <p className="note">
-          d₁ and d₂, anchored at line 1's point, span a parallelogram (drawn on the canvas) —
-          |d₁ × d₂| is exactly that parallelogram's area, and the cross product itself points
+          m₁ and m₂, anchored at line 1's point, span a parallelogram (drawn on the canvas) —
+          |m₁ × m₂| is exactly that parallelogram's area, and the cross product itself points
           along the one direction perpendicular to both.
         </p>
       </>
@@ -301,7 +307,7 @@ function LineLineReadout({ line1, line2, view }) {
         <>
           <VectorRow label="Intersection point" vector={rel.point} />
           <p className="note">
-            Direction vectors aren't parallel, and the two lines lie in a common plane (d₁, d₂,
+            Direction vectors aren't parallel, and the two lines lie in a common plane (m₁, m₂,
             and the vector between the two points are coplanar) — so they cross at one point.
           </p>
         </>
@@ -330,7 +336,7 @@ function LineLineReadout({ line1, line2, view }) {
           <VectorRow label="Common perpendicular direction" vector={rel.commonPerpendicular} />
           <p className="note">
             Not parallel, and not coplanar either — so they never meet. A line in 3D doesn't have
-            a single "normal" the way a plane does, but d₁ × d₂ gives the one direction
+            a single "normal" the way a plane does, but m₁ × m₂ gives the one direction
             perpendicular to <em>both</em> lines at once — that's what the dashed segment on the
             canvas follows, and its length is the shortest possible distance between them.
           </p>
@@ -415,15 +421,91 @@ function PlanePlaneReadout({ plane1, plane2, view }) {
   );
 }
 
+function PointLineReadout({ point, line, view }) {
+  const rel = pointLineRelationship(point, line);
+  if (rel.type === "degenerate") {
+    return <p className="note">Direction vector is zero — this isn't a valid line.</p>;
+  }
+
+  if (view === "reflection") {
+    const reflected = reflectPointAcrossLine(point, line);
+    return (
+      <>
+        <p className="formula">Point reflected in the line</p>
+        <VectorRow label="N (foot of perpendicular)" vector={rel.foot} />
+        <VectorRow label="P′ (reflected point)" vector={reflected} />
+        <p className="note">
+          N is the midpoint of P and P′ — once N is found, the Ratio Theorem (with λ = μ) gives
+          P′ = 2N − P.
+        </p>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <VectorRow label="N (foot of perpendicular)" vector={rel.foot} />
+      <div className="result-row">
+        <span>Shortest distance from P to the line</span>
+        <strong>{fmt(rel.distance)}</strong>
+      </div>
+      <p className="note">
+        N is found by projecting AP onto m (A is any point on the line): AN = (AP · m / m · m) m,
+        then N = A + AN. PN is perpendicular to m, so |PN| is the shortest distance from P to the
+        line.
+      </p>
+    </>
+  );
+}
+
+function PointPlaneReadout({ point, plane, view }) {
+  const rel = pointPlaneRelationship(point, plane);
+  if (rel.type === "degenerate") {
+    return <p className="note">Normal vector is zero — this isn't a valid plane.</p>;
+  }
+
+  if (view === "reflection") {
+    const reflected = reflectPointAcrossPlane(point, plane);
+    return (
+      <>
+        <p className="formula">Point reflected in the plane</p>
+        <VectorRow label="N (foot of perpendicular)" vector={rel.foot} />
+        <VectorRow label="P′ (reflected point)" vector={reflected} />
+        <p className="note">
+          N is the midpoint of P and P′ — once N is found, the Ratio Theorem (with λ = μ) gives
+          P′ = 2N − P.
+        </p>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <VectorRow label="N (foot of perpendicular)" vector={rel.foot} />
+      <div className="result-row">
+        <span>Shortest distance from P to the plane</span>
+        <strong>{fmt(rel.distance)}</strong>
+      </div>
+      <p className="note">
+        N is found by projecting QA onto n̂ (A is any point on the plane, Q = P): QN = (QA · n̂) n̂,
+        then N = Q + QN. PN runs along n, so |PN| is the shortest distance from P to the plane.
+      </p>
+    </>
+  );
+}
+
 export default function ReadoutPanel3D({
   mode,
   line1,
   line2,
   plane1,
   plane2,
+  point1,
   planePlaneView,
   linePlaneView,
   lineLineView,
+  pointLineView,
+  pointPlaneView,
 }) {
   return (
     <div className="panel readout-panel">
@@ -434,6 +516,12 @@ export default function ReadoutPanel3D({
       {mode === "lineLine" && <LineLineReadout line1={line1} line2={line2} view={lineLineView} />}
       {mode === "planePlane" && (
         <PlanePlaneReadout plane1={plane1} plane2={plane2} view={planePlaneView} />
+      )}
+      {mode === "pointLine" && (
+        <PointLineReadout point={point1} line={line1} view={pointLineView} />
+      )}
+      {mode === "pointPlane" && (
+        <PointPlaneReadout point={point1} plane={plane1} view={pointPlaneView} />
       )}
     </div>
   );

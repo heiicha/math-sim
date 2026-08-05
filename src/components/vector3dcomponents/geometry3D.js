@@ -24,14 +24,14 @@ export function pointOnLine(line, lambda) {
 }
 
 // Any two vectors spanning the plane, perpendicular to its normal — used
-// for the parametric vector form r = a + λb + μc, and for drawing a
+// for the parametric vector form r = a + λm1 + μm2, and for drawing a
 // finite patch of the plane in the 3D scene.
 export function spanningVectors(normal) {
   const n = normalize(normal);
   const reference = Math.abs(n.x) < 0.9 ? { x: 1, y: 0, z: 0 } : { x: 0, y: 1, z: 0 };
-  const b = normalize(crossProduct(n, reference));
-  const c = normalize(crossProduct(n, b));
-  return { b, c };
+  const m1 = normalize(crossProduct(n, reference));
+  const m2 = normalize(crossProduct(n, m1));
+  return { m1, m2 };
 }
 
 export function reflectPointAcrossPlane(point, plane) {
@@ -125,7 +125,10 @@ export function lineLineRelationship(line1, line2) {
   if (coplanar) {
     const lambda = dot(crossProduct(diff, d2), cross) / (crossMag * crossMag);
     const point = pointOnLine(line1, lambda);
-    return { type: "intersecting", point, lambda, angleDeg };
+    // parameter of the same point along line2, so callers can size line2's
+    // drawn segment to reach it too (point lies exactly on line2 here)
+    const lambda2 = dot(subtract(point, line2.point), d2) / dot(d2, d2);
+    return { type: "intersecting", point, lambda, lambda2, angleDeg };
   }
 
   const distance = Math.abs(scalarTriple) / crossMag;
@@ -195,6 +198,52 @@ export function planePlaneRelationship(plane1, plane2) {
     angleDeg,
     line: { point, direction: normalize(cross) },
   };
+}
+
+// ---- Point & Line -----------------------------------------------------
+
+// Foot of the perpendicular, N, from a point to the line r = a + λm — via
+// vector projection: AP = P - A, AN = (AP . m / m . m) m, N = A + AN.
+export function footOfPerpendicularToLine(point, line) {
+  const m = line.direction;
+  const mMagSq = dot(m, m);
+  if (mMagSq < EPS) return null;
+  const AP = subtract(point, line.point);
+  const t = dot(AP, m) / mMagSq;
+  return add(line.point, scale(m, t));
+}
+
+export function pointLineRelationship(point, line) {
+  const foot = footOfPerpendicularToLine(point, line);
+  if (!foot) return { type: "degenerate" };
+  return { type: "foot", foot, distance: magnitude(subtract(point, foot)) };
+}
+
+// Reflection of a point in a line: N is the midpoint of P and its
+// reflection P', so P' = 2N - P (Ratio Theorem with λ = μ).
+export function reflectPointAcrossLine(point, line) {
+  const foot = footOfPerpendicularToLine(point, line);
+  if (!foot) return point;
+  return subtract(scale(foot, 2), point);
+}
+
+// ---- Point & Plane ------------------------------------------------------
+
+// Foot of the perpendicular, N, from a point to the plane r . n = D — via
+// vector projection: QA = A - Q (A any point on the plane), QN = (QA . n̂) n̂.
+export function footOfPerpendicularToPlane(point, plane) {
+  const n = plane.normal;
+  const nMagSq = dot(n, n);
+  if (nMagSq < EPS) return null;
+  const QA = subtract(plane.point, point);
+  const t = dot(QA, n) / nMagSq;
+  return add(point, scale(n, t));
+}
+
+export function pointPlaneRelationship(point, plane) {
+  const foot = footOfPerpendicularToPlane(point, plane);
+  if (!foot) return { type: "degenerate" };
+  return { type: "foot", foot, distance: magnitude(subtract(point, foot)) };
 }
 
 // ---- Cartesian equation formatting ----------------------------------------

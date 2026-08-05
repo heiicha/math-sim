@@ -22,7 +22,7 @@ function DotReadout({ vecA, vecB }) {
   return (
     <>
       <p className="formula">
-        a · b = a<sub>x</sub>b<sub>x</sub> + a<sub>y</sub>b<sub>y</sub> + a<sub>z</sub>b<sub>z</sub>
+        a · b = a<sub>1</sub>b<sub>1</sub> + a<sub>2</sub>b<sub>2</sub> + a<sub>3</sub>b<sub>3</sub>
       </p>
       <p className="formula formula-sub">a · b = |a| |b| cos θ</p>
       <div className="result-row">
@@ -49,7 +49,7 @@ function CrossReadout({ vecA, vecB, crossShape }) {
   const area = magnitude(c);
   return (
     <>
-      <p className="formula">a × b = (a₂b₃ − a₃b₂)i − (a₁b₃ − a₃b₁)j + (a₁b₂ − a₂b₁)k</p>
+      <p className="formula">a × b = (a₂b₃ − a₃b₂)i + (a₃b₁ − a₁b₃)j + (a₁b₂ − a₂b₁)k</p>
       <div className="result-row">
         <span>a × b</span>
         <strong>{toIJK(c)}</strong>
@@ -87,7 +87,8 @@ function AdditionReadout({ vecA, vecB }) {
         <strong>{magnitude(result).toFixed(2)}</strong>
       </div>
       <p className="note">
-        Resultant vector from addition will follow tip-to-tail rule. 
+        By the Triangle Law of Vector Addition, a + b is found tip-to-tail: walk along a, then
+        from there walk along b — the resultant is the vector straight from the start to the end.
       </p>
     </>
   );
@@ -99,32 +100,32 @@ function ProjectionReadout({ vecA, vecB }) {
   const perp = perpendicularComponent(vecA, vecB);
   return (
     <>
-      <p className="formula">proj_b(a) = (a · b / b · b) b</p>
+      <p className="formula">u = (a · b̂) b̂</p>
       <div className="result-row">
-        <span>proj_b(a)</span>
+        <span>u (projection vector of a onto b)</span>
         <strong>{toIJK(projVec)}</strong>
       </div>
       <div className="result-row">
-        <span>scalar length</span>
+        <span>Length of projection of a onto b, |a · b̂|</span>
         <strong>{fmt(scalar)}</strong>
       </div>
       <div className="result-row">
-        <span>perp = a − proj_b(a)</span>
+        <span>v (vector component of a perpendicular to b)</span>
         <strong>{toIJK(perp)}</strong>
       </div>
       <p className="note">
-        proj_b(a) is a's shadow along b; perp is what's left over once you remove that shadow —
-        together they add back up to exactly <em>a</em>.
+        u is a's shadow along b; v is what's left over once you remove that shadow — together
+        u + v = <em>a</em>, forming a right-angled triangle with a as its hypotenuse.
       </p>
     </>
   );
 }
 
 function RatioReadout({ pointA, pointB, ratio }) {
-  const P = sectionFormula(pointA, pointB, ratio.m, ratio.n);
+  const P = sectionFormula(pointA, pointB, ratio.lambda, ratio.mu);
   return (
     <>
-      <p className="formula">P = (n·A + m·B) / (m + n)</p>
+      <p className="formula">OP = (μa + λb) / (λ + μ)</p>
       <div className="result-row">
         <span>A (a's head)</span>
         <strong>{toIJK(pointA)}</strong>
@@ -134,13 +135,12 @@ function RatioReadout({ pointA, pointB, ratio }) {
         <strong>{toIJK(pointB)}</strong>
       </div>
       <div className="result-row">
-        <span>P, where AP : PB = {ratio.m} : {ratio.n}</span>
+        <span>P, where AP : PB = {ratio.lambda} : {ratio.mu}</span>
         <strong>{toIJK(P)}</strong>
       </div>
       <p className="note">
-        This is the section (ratio) theorem: P sits along segment AB at the point that splits it
-        into lengths in the ratio m : n. m = n gives the midpoint; letting one of m, n go negative
-        moves P outside the segment (external division).
+        This is the Ratio Theorem: P divides AB in the ratio λ : μ. λ = μ gives the midpoint;
+        letting one of λ, μ go negative moves P outside the segment (external division).
       </p>
     </>
   );

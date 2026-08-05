@@ -50,11 +50,22 @@ function LineInputs({ label, color, line, onChange }) {
         onChange={(p) => onChange({ ...line, point: p })}
       />
       <ColumnInput
-        label="d"
+        label="m"
         color={color}
         vector={line.direction}
         onChange={(d) => onChange({ ...line, direction: d })}
       />
+    </div>
+  );
+}
+
+function PointInputs({ label, color, point, onChange }) {
+  return (
+    <div className="entity-group">
+      <p className="entity-title" style={{ color }}>
+        {label}
+      </p>
+      <ColumnInput label="p" color={color} vector={point} onChange={onChange} />
     </div>
   );
 }
@@ -110,12 +121,18 @@ export default function ControlPanel3D({
   setPlane1,
   plane2,
   setPlane2,
+  point1,
+  setPoint1,
   planePlaneView,
   setPlanePlaneView,
   linePlaneView,
   setLinePlaneView,
   lineLineView,
   setLineLineView,
+  pointLineView,
+  setPointLineView,
+  pointPlaneView,
+  setPointPlaneView,
 }) {
   return (
     <aside className="panel control-panel">
@@ -156,6 +173,38 @@ export default function ControlPanel3D({
                 { key: "relationship", label: "Relationship" },
                 { key: "addition", label: "Addition" },
                 { key: "cross", label: "Cross Product" },
+              ]}
+            />
+          </>
+        )}
+
+        {mode === "pointLine" && (
+          <>
+            <PointInputs label="Point" color="var(--vec-a)" point={point1} onChange={setPoint1} />
+            <LineInputs label="Line" color="var(--vec-b)" line={line1} onChange={setLine1} />
+
+            <ShowToggle
+              value={pointLineView}
+              onChange={setPointLineView}
+              options={[
+                { key: "distance", label: "Distance" },
+                { key: "reflection", label: "Reflection" },
+              ]}
+            />
+          </>
+        )}
+
+        {mode === "pointPlane" && (
+          <>
+            <PointInputs label="Point" color="var(--vec-a)" point={point1} onChange={setPoint1} />
+            <PlaneInputs label="Plane" color="var(--vec-b)" plane={plane1} onChange={setPlane1} />
+
+            <ShowToggle
+              value={pointPlaneView}
+              onChange={setPointPlaneView}
+              options={[
+                { key: "distance", label: "Distance" },
+                { key: "reflection", label: "Reflection" },
               ]}
             />
           </>

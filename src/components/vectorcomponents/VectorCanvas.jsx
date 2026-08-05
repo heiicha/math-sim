@@ -514,17 +514,17 @@ function drawProjectionMode(p, vecA, vecB, aS, bS, ox, oy, colors) {
   p.textSize(15);
   p.textAlign(p.LEFT, p.TOP);
   p.text(
-    `proj_b(a) = ${projVec.x.toFixed(2)}i + ${projVec.y.toFixed(2)}j + ${projVec.z.toFixed(2)}k`,
+    `u = ${projVec.x.toFixed(2)}i + ${projVec.y.toFixed(2)}j + ${projVec.z.toFixed(2)}k`,
     14,
     14
   );
   p.fill(colors.dim);
   p.textSize(13);
-  p.text(`scalar length = ${scalarProj.toFixed(2)}`, 14, 34);
+  p.text(`length of projection = ${scalarProj.toFixed(2)}`, 14, 34);
   p.fill(colors.negative);
   p.textSize(15);
   p.text(
-    `perp = ${perp.x.toFixed(2)}i + ${perp.y.toFixed(2)}j + ${perp.z.toFixed(2)}k`,
+    `v = ${perp.x.toFixed(2)}i + ${perp.y.toFixed(2)}j + ${perp.z.toFixed(2)}k`,
     14,
     54
   );
@@ -532,7 +532,7 @@ function drawProjectionMode(p, vecA, vecB, aS, bS, ox, oy, colors) {
 }
 
 function drawRatioMode(p, pointA, pointB, aS, bS, origin, ratio, colors) {
-  const P = sectionFormula(pointA, pointB, ratio.m, ratio.n);
+  const P = sectionFormula(pointA, pointB, ratio.lambda, ratio.mu);
   const pS = { x: origin.x + P.x * UNIT, y: origin.y - P.y * UNIT };
 
   p.push();
@@ -574,7 +574,7 @@ function drawRatioMode(p, pointA, pointB, aS, bS, origin, ratio, colors) {
   p.text(`P = ${P.x.toFixed(2)}i + ${P.y.toFixed(2)}j + ${P.z.toFixed(2)}k`, 14, 14);
   p.fill(colors.dim);
   p.textSize(13);
-  p.text(`AP : PB = ${ratio.m} : ${ratio.n}`, 14, 38);
+  p.text(`AP : PB = ${ratio.lambda} : ${ratio.mu}`, 14, 38);
   p.pop();
 }
 

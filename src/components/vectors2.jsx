@@ -33,6 +33,21 @@ export const MODE_GROUPS = [
       },
     ],
   },
+  {
+    title: "Point Relationships",
+    items: [
+      {
+        key: "pointLine",
+        label: "Point & Line",
+        tagline: "Foot of perpendicular, shortest distance, and reflection of a point in a line",
+      },
+      {
+        key: "pointPlane",
+        label: "Point & Plane",
+        tagline: "Foot of perpendicular, shortest distance, and reflection of a point in a plane",
+      },
+    ],
+  },
 ];
 
 export const MODES = Object.fromEntries(MODE_GROUPS.flatMap((g) => g.items).map((item) => [item.key, item]));
@@ -46,9 +61,13 @@ function Vectors2() {
   const [plane1, setPlane1] = useState({ point: { x: 0, y: 0, z: 4 }, normal: { x: 0, y: 0, z: 1 } });
   const [plane2, setPlane2] = useState({ point: { x: 0, y: 0, z: 0 }, normal: { x: 1, y: 1, z: 0 } });
 
+  const [point1, setPoint1] = useState({ x: 3, y: 3, z: 3 });
+
   const [planePlaneView, setPlanePlaneView] = useState("angle"); // "angle" | "distance" | "reflection"
   const [linePlaneView, setLinePlaneView] = useState("relationship"); // "relationship" | "reflection"
   const [lineLineView, setLineLineView] = useState("relationship"); // "relationship" | "addition" | "cross"
+  const [pointLineView, setPointLineView] = useState("distance"); // "distance" | "reflection"
+  const [pointPlaneView, setPointPlaneView] = useState("distance"); // "distance" | "reflection"
 
   return (
     <div className="app-shell">
@@ -73,12 +92,18 @@ function Vectors2() {
             setPlane1={setPlane1}
             plane2={plane2}
             setPlane2={setPlane2}
+            point1={point1}
+            setPoint1={setPoint1}
             planePlaneView={planePlaneView}
             setPlanePlaneView={setPlanePlaneView}
             linePlaneView={linePlaneView}
             setLinePlaneView={setLinePlaneView}
             lineLineView={lineLineView}
             setLineLineView={setLineLineView}
+            pointLineView={pointLineView}
+            setPointLineView={setPointLineView}
+            pointPlaneView={pointPlaneView}
+            setPointPlaneView={setPointPlaneView}
           />
 
           <section className="canvas-panel">
@@ -92,9 +117,13 @@ function Vectors2() {
               setPlane1={setPlane1}
               plane2={plane2}
               setPlane2={setPlane2}
+              point1={point1}
+              setPoint1={setPoint1}
               planePlaneView={planePlaneView}
               linePlaneView={linePlaneView}
               lineLineView={lineLineView}
+              pointLineView={pointLineView}
+              pointPlaneView={pointPlaneView}
             />
             <p className="canvas-hint">
               Drag empty space to orbit, scroll to zoom, or drag a point/arrow tip to edit it directly.
@@ -134,9 +163,12 @@ function Vectors2() {
           line2={line2}
           plane1={plane1}
           plane2={plane2}
+          point1={point1}
           planePlaneView={planePlaneView}
           linePlaneView={linePlaneView}
           lineLineView={lineLineView}
+          pointLineView={pointLineView}
+          pointPlaneView={pointPlaneView}
         />
       </main>
     </div>

@@ -34,7 +34,7 @@ function Vectors1() {
   const [vecB, setVecB] = useState({ tail: { x: 0, y: -1, z: 0 }, head: { x: 2, y: 1, z: -1 } });
 
   const [crossShape, setCrossShape] = useState("parallelogram"); // "parallelogram" | "triangle"
-  const [ratio, setRatio] = useState({ m: 1, n: 1 });
+  const [ratio, setRatio] = useState({ lambda: 1, mu: 1 });
   const componentsOf = (v) => ({
     x: v.head.x - v.tail.x,
     y: v.head.y - v.tail.y,

@@ -1,3 +1,60 @@
+.line-equation {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 0;
+}
+
+.line-eq-symbol {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.result-row-vector {
+  align-items: center;
+}
+
+.col-vec {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.col-vec-bracket {
+  width: 6px;
+  border-style: solid;
+  border-color: var(--text-dim);
+  border-width: 2px;
+}
+
+.col-vec-bracket-left {
+  border-right: none;
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+}
+
+.col-vec-bracket-right {
+  border-left: none;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+
+.col-vec-values {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.3;
+  color: var(--text);
+  text-align: right;
+}
+
 .cartesian-eq {
   font-family: var(--font-mono);
   font-size: 1.05rem;
