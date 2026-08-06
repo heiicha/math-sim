@@ -8,9 +8,11 @@ import {
   vectorProjection,
   perpendicularComponent,
   add,
+  subtract,
   magnitude,
   sectionFormula,
   toDegrees,
+  vectorRelationship,
 } from "./vectorMath.js";
 import "./VectorCanvas.css";
 
@@ -113,7 +115,7 @@ export default function VectorCanvas({
 
       p.draw = () => {
         const state = stateRef.current;
-        const { mode, vecA, vecB, crossShape, ratio } = state;
+        const { mode, vecA, vecB, vecC, crossShape, ratio } = state;
         const origin = getOrigin();
         const entities = getEntities(state);
 
@@ -150,10 +152,15 @@ export default function VectorCanvas({
           );
         } else if (mode === "addition") {
           drawAdditionMode(p, entities, anchor.x, anchor.y, colors);
+        } else if (mode === "subtraction") {
+          drawSubtractionMode(p, aComp, bComp, aForOverlay, bForOverlay, anchor.x, anchor.y, colors);
         } else if (mode === "projection") {
           drawProjectionMode(p, aComp, bComp, aForOverlay, bForOverlay, anchor.x, anchor.y, colors);
         } else if (mode === "ratio") {
           drawRatioMode(p, vecA.head, vecB.head, aHeadS, bHeadS, origin, ratio, colors);
+        } else if (mode === "collinear" && vecC) {
+          const cHeadS = toScreen(vecC.head, origin);
+          drawCollinearMode(p, vecA.head, vecB.head, vecC.head, aHeadS, bHeadS, cHeadS, colors);
         }
 
         entities.forEach((e) => {
@@ -532,6 +539,30 @@ function drawAdditionMode(p, entities, ox, oy, colors) {
   p.pop();
 }
 
+function drawSubtractionMode(p, vecA, vecB, aS, bS, ox, oy, colors) {
+  const diff = subtract(vecB, vecA);
+  const mag = magnitude(diff);
+
+  // ghost b, anchored at the same tail as a, so both start from a common
+  // point — matching the notes' diagram (u = a, v = b, v − u runs tip-to-tip)
+  drawDashedLine(p, { x: ox, y: oy }, bS, colors.dim);
+
+  // b − a: the displacement from a's tip to b's tip
+  drawVectorArrow(p, aS.x, aS.y, bS, colors.result, "b−a");
+
+  p.push();
+  p.noStroke();
+  p.fill(colors.result);
+  p.textFont("'JetBrains Mono', monospace");
+  p.textSize(15);
+  p.textAlign(p.LEFT, p.TOP);
+  p.text(`b − a = ${diff.x.toFixed(2)}i + ${diff.y.toFixed(2)}j + ${diff.z.toFixed(2)}k`, 14, 14);
+  p.fill(colors.dim);
+  p.textSize(13);
+  p.text(`|b − a| = ${mag.toFixed(2)}`, 14, 34);
+  p.pop();
+}
+
 function drawProjectionMode(p, vecA, vecB, aS, bS, ox, oy, colors) {
   const projVec = vectorProjection(vecA, vecB);
   const scalarProj = scalarProjection(vecA, vecB);
@@ -622,6 +653,46 @@ function drawRatioMode(p, pointA, pointB, aS, bS, origin, ratio, colors) {
   p.fill(colors.dim);
   p.textSize(13);
   p.text(`AP : PB = ${ratio.lambda} : ${ratio.mu}`, 14, 38);
+  p.pop();
+}
+
+function drawCollinearMode(p, pointA, pointB, pointC, aS, bS, cS, colors) {
+  const AB = subtract(pointB, pointA);
+  const BC = subtract(pointC, pointB);
+  const rel = vectorRelationship(AB, BC);
+  const collinear = rel === "parallel";
+
+  p.push();
+  p.stroke(colors.dim);
+  p.strokeWeight(2);
+  p.line(aS.x, aS.y, bS.x, bS.y);
+  p.line(bS.x, bS.y, cS.x, cS.y);
+  p.pop();
+
+  if (collinear) {
+    // a solid line through all three, confirming the straight line they share
+    p.push();
+    p.stroke(colors.result);
+    p.strokeWeight(3);
+    p.line(aS.x, aS.y, cS.x, cS.y);
+    p.pop();
+  }
+
+  p.push();
+  p.noStroke();
+  p.fill(colors.result);
+  p.textFont("'JetBrains Mono', monospace");
+  p.textSize(16);
+  p.textAlign(p.LEFT, p.TOP);
+  p.text(
+    rel === "degenerate" ? "two points coincide" : collinear ? "A, B, C are collinear" : "A, B, C are not collinear",
+    14,
+    14
+  );
+  p.fill(colors.dim);
+  p.textSize(13);
+  p.text(`AB = ${AB.x.toFixed(2)}i + ${AB.y.toFixed(2)}j + ${AB.z.toFixed(2)}k`, 14, 38);
+  p.text(`BC = ${BC.x.toFixed(2)}i + ${BC.y.toFixed(2)}j + ${BC.z.toFixed(2)}k`, 14, 56);
   p.pop();
 }
 

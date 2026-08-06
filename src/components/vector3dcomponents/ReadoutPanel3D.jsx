@@ -1,8 +1,11 @@
+import { useState } from "react";
 import {
   linePlaneRelationship,
   lineLineRelationship,
   planePlaneRelationship,
+  threePlanesRelationship,
   reflectLineAcrossPlane,
+  reflectLineAcrossLine,
   reflectPlaneAcrossPlane,
   reflectPointAcrossPlane,
   reflectPointAcrossLine,
@@ -135,6 +138,171 @@ function Badge({ type }) {
   return <span className={`relation-badge relation-${type}`}>{BADGE_LABEL[type] ?? type}</span>;
 }
 
+// Defining conditions, quoted from the H2 Maths Vectors II notes (§4.1-4.3).
+const LINE_LINE_CONDITIONS = {
+  parallel:
+    "Two distinct lines are parallel if their direction vectors are scalar multiples of each other, i.e. m₁ = km₂ for some k ∈ ℝ.",
+  intersecting:
+    "Two distinct lines are intersecting if solving their equations simultaneously gives exactly one solution, i.e. λ and μ satisfy the 3rd equation.",
+  skew:
+    "In 3D space, skew lines are two lines that do not intersect and are not parallel, i.e. λ and μ do not satisfy the 3rd equation.",
+};
+
+const LINE_PLANE_CONDITIONS = {
+  contained: "l lies on p or p contains l, i.e. m · n = 0 AND a · n = D.",
+  parallel: "l is parallel to p but does NOT lie on p, i.e. m · n = 0 AND a · n ≠ D.",
+  intersecting: "l intersects p at exactly one point, i.e. m · n ≠ 0.",
+};
+
+const PLANE_PLANE_CONDITIONS = {
+  parallel:
+    "The planes are parallel: their normal vectors are parallel, i.e. both normal vectors are scalar multiples of each other, and one point on p₁ does not lie on p₂.",
+  intersecting:
+    "The planes intersect at a line: if their normal vectors are NOT parallel to each other, the planes must intersect at a line.",
+};
+
+function Condition({ text }) {
+  if (!text) return null;
+  return (
+    <p className="condition">
+      <span className="condition-label">From the notes</span>
+      {text}
+    </p>
+  );
+}
+
+// A boxed formula from the notes (§5, Appendix), with its live-substituted
+// result rendered right underneath — same pairing as the notes themselves.
+function FormulaBox({ title, formula, children }) {
+  return (
+    <div className="formula-box">
+      <p className="formula-box-title">{title}</p>
+      <p className="formula-box-formula">{formula}</p>
+      {children}
+    </div>
+  );
+}
+
+function LineLineFormulasReadout({ lines }) {
+  // Formula reference is always binary — line1 vs line2 — regardless of
+  // how many extra lines are on the canvas (same convention as "cross").
+  const rel = lineLineRelationship(lines[0].data, lines[1].data);
+
+  return (
+    <>
+      <FormulaBox title="Angle between Two Lines" formula="cos θ = |m₁ · m₂| / (|m₁| |m₂|)">
+        {rel.type === "degenerate" ? (
+          <p className="note">One of the lines has a zero direction vector — not a valid line.</p>
+        ) : rel.type === "same" ? (
+          <p className="note">l₁ and l₂ describe the same line, so there's no angle between them.</p>
+        ) : (
+          <div className="result-row">
+            <span>θ</span>
+            <strong>{rel.angleDeg.toFixed(1)}°</strong>
+          </div>
+        )}
+      </FormulaBox>
+
+      <FormulaBox title="Distance between Two Parallel Lines" formula="|(a₁ − a₂) × m̂|">
+        {rel.type === "parallel" ? (
+          <div className="result-row">
+            <span>Distance</span>
+            <strong>{rel.distance.toFixed(2)}</strong>
+          </div>
+        ) : (
+          <p className="note">Only applies when l₁ and l₂ are parallel — right now they're {rel.type}.</p>
+        )}
+      </FormulaBox>
+
+      <FormulaBox
+        title="Distance between Two Skew Lines"
+        formula="|(a₁ − a₂) · (m₁ × m₂)| / |m₁ × m₂|"
+      >
+        {rel.type === "skew" ? (
+          <div className="result-row">
+            <span>Shortest distance</span>
+            <strong>{rel.distance.toFixed(2)}</strong>
+          </div>
+        ) : (
+          <p className="note">Only applies when l₁ and l₂ are skew — right now they're {rel.type}.</p>
+        )}
+      </FormulaBox>
+    </>
+  );
+}
+
+function LinePlaneFormulasReadout({ lines, planes }) {
+  const rel = linePlaneRelationship(lines[0].data, planes[0].data);
+
+  return (
+    <>
+      <FormulaBox title="Angle between a Line and a Plane" formula="sin θ = |m · n| / (|m| |n|)">
+        {rel.type === "degenerate" ? (
+          <p className="note">Direction or normal vector is zero — not a valid line/plane.</p>
+        ) : (
+          <div className="result-row">
+            <span>θ</span>
+            <strong>{rel.angleDeg.toFixed(1)}°</strong>
+          </div>
+        )}
+      </FormulaBox>
+
+      <FormulaBox title="Distance from a Point to a Plane" formula="|p · n − D| / |n|">
+        {rel.type === "parallel" ? (
+          <div className="result-row">
+            <span>Distance from line to plane</span>
+            <strong>{rel.distance.toFixed(2)}</strong>
+          </div>
+        ) : (
+          <p className="note">
+            {rel.type === "contained"
+              ? "l lies on p, so the distance is 0 everywhere."
+              : rel.type === "intersecting"
+              ? "l and p intersect, so there's no constant distance between them."
+              : "Direction or normal vector is zero — not a valid line/plane."}
+          </p>
+        )}
+      </FormulaBox>
+    </>
+  );
+}
+
+function PlanePlaneFormulasReadout({ planes }) {
+  const rel = planePlaneRelationship(planes[0].data, planes[1].data);
+
+  return (
+    <>
+      <FormulaBox title="Angle between Two Planes" formula="cos θ = |n₁ · n₂| / (|n₁| |n₂|)">
+        {rel.type === "degenerate" ? (
+          <p className="note">One of the planes has a zero normal vector — not a valid plane.</p>
+        ) : (
+          <div className="result-row">
+            <span>θ</span>
+            <strong>{rel.angleDeg.toFixed(1)}°</strong>
+          </div>
+        )}
+      </FormulaBox>
+
+      <FormulaBox title="Distance between Two Parallel Planes" formula="|D₁ − D₂| / |n|">
+        {rel.type === "parallel" ? (
+          <div className="result-row">
+            <span>Distance</span>
+            <strong>{rel.distance.toFixed(2)}</strong>
+          </div>
+        ) : (
+          <p className="note">
+            {rel.type === "same"
+              ? "p₁ and p₂ are the same plane, so the distance is 0."
+              : rel.type === "intersecting"
+              ? "p₁ and p₂ intersect, so there's no constant distance between them."
+              : "One of the planes has a zero normal vector — not a valid plane."}
+          </p>
+        )}
+      </FormulaBox>
+    </>
+  );
+}
+
 function PairHeading({ a, b }) {
   return (
     <div className="result-row pair-heading">
@@ -254,6 +422,7 @@ function LinePlaneReadout({ lines, planes, view }) {
           <span>Relationship</span>
           <Badge type={rel.type} />
         </div>
+        <Condition text={LINE_PLANE_CONDITIONS[rel.type]} />
         <VectorRow label="n (normal to plane)" vector={planes[0].data.normal} />
 
         {rel.type === "intersecting" && (
@@ -330,6 +499,48 @@ function LinePlaneReadout({ lines, planes, view }) {
 }
 
 function LineLineReadout({ lines, view }) {
+  if (view === "reflection") {
+    const mirror = lines[0];
+    const others = lines.slice(1);
+
+    if (others.length === 1) {
+      // default (exactly line1, line2): original text, unchanged
+      const reflected = reflectLineAcrossLine(others[0].data, mirror.data);
+      return (
+        <>
+          <p className="formula">Line 2 reflected across Line 1</p>
+          <LineEquation pointA={reflected.point} direction={reflected.direction} symbol="r′" />
+          <p className="note">
+            Two points on line 2 (its point, and its point plus direction) are each reflected
+            across line 1 — the foot of perpendicular to line 1, then the Ratio Theorem (λ = μ)
+            for each. The line through the two reflected points is line 2's mirror image.
+          </p>
+        </>
+      );
+    }
+
+    return (
+      <>
+        {others.map((entry) => {
+          const reflected = reflectLineAcrossLine(entry.data, mirror.data);
+          return (
+            <div className="pair-block" key={entry.key}>
+              <p className="formula">
+                {entry.label} reflected across {mirror.label}
+              </p>
+              <LineEquation pointA={reflected.point} direction={reflected.direction} symbol="r′" />
+            </div>
+          );
+        })}
+        <p className="note">
+          Every other line reflects across {mirror.label} the same way: two of its points are each
+          reflected across {mirror.label} via the foot of perpendicular and the Ratio Theorem, then
+          the line is rebuilt through the reflected pair.
+        </p>
+      </>
+    );
+  }
+
   if (view === "addition") {
     if (lines.length === 2) {
       // default (exactly line1, line2): original text, unchanged
@@ -413,6 +624,7 @@ function LineLineReadout({ lines, view }) {
           <span>Relationship</span>
           <Badge type={rel.type} />
         </div>
+        <Condition text={LINE_LINE_CONDITIONS[rel.type]} />
 
         {rel.type !== "same" && (
           <div className="result-row">
@@ -497,6 +709,46 @@ function LineLineReadout({ lines, view }) {
   );
 }
 
+// §4.5 (marked "optional" in the notes): how Planes 1, 2 & 3 relate all
+// together, not just pairwise — only ever considers the first three planes,
+// same convention as "cross" always using line1 x line2 regardless of extras.
+const THREE_PLANES_LABEL = {
+  point: "meet at exactly one point",
+  line: "meet along a common line",
+  none: "share no common point",
+  samePlane: "are all the same plane",
+};
+
+function ThreePlanesReadout({ planes }) {
+  if (planes.length < 3) return null;
+  const rel = threePlanesRelationship(planes[0].data, planes[1].data, planes[2].data);
+  if (rel.type === "degenerate") return null;
+
+  return (
+    <div className="pair-block">
+      <p className="formula">Planes 1, 2 &amp; 3 together</p>
+      <div className="result-row">
+        <span>Relationship</span>
+        <strong>{THREE_PLANES_LABEL[rel.type]}</strong>
+      </div>
+      {rel.type === "point" && <VectorRow label="Point of intersection" vector={rel.point} />}
+      {rel.type === "line" && (
+        <LineEquation pointA={rel.line.point} direction={rel.line.direction} />
+      )}
+      <p className="note">
+        {rel.type === "point" &&
+          "The three normals aren't coplanar, so solving all three plane equations simultaneously gives exactly one solution."}
+        {rel.type === "line" &&
+          "Planes 1 and 2 meet along a line, and that same line also lies entirely on plane 3 — so all three planes share it."}
+        {rel.type === "none" &&
+          "Either two of the planes are parallel and distinct, or the three normals are coplanar but the planes form a \"triangular prism\" with no point common to all three."}
+        {rel.type === "samePlane" &&
+          "Planes 1, 2 and 3 all describe the same plane — every point on one lies on the other two as well."}
+      </p>
+    </div>
+  );
+}
+
 function PlanePlaneReadout({ planes, view }) {
   if (view === "reflection") {
     const mirror = planes[0];
@@ -561,6 +813,7 @@ function PlanePlaneReadout({ planes, view }) {
           <span>Relationship</span>
           <Badge type={rel.type} />
         </div>
+        <Condition text={PLANE_PLANE_CONDITIONS[rel.type]} />
 
         {view === "angle" && (
           <>
@@ -615,6 +868,7 @@ function PlanePlaneReadout({ planes, view }) {
 
   return (
     <>
+      <ThreePlanesReadout planes={planes} />
       {pairs.map((pr) => (
         <div className="pair-block" key={`${pr.a.key}-${pr.b.key}`}>
           <PairHeading a={pr.a} b={pr.b} />
@@ -745,6 +999,10 @@ export default function ReadoutPanel3D({
   pointLineView,
   pointPlaneView,
 }) {
+  const [showFormulas, setShowFormulas] = useState(false);
+  const supportsFormulas = mode === "lineLine" || mode === "linePlane" || mode === "planePlane";
+  const showingFormulas = showFormulas && supportsFormulas;
+
   const lineLineEntries = [
     { key: "line1", label: "Line 1", color: "var(--vec-a)", data: line1 },
     { key: "line2", label: "Line 2", color: "var(--vec-b)", data: line2 },
@@ -777,14 +1035,34 @@ export default function ReadoutPanel3D({
 
   return (
     <div className="panel readout-panel">
-      <p className="readout-eyebrow">Live readout</p>
-      {mode === "lineForms" && <LineFormsReadout line={line1} />}
-      {mode === "planeForms" && <PlaneFormsReadout plane={plane1} />}
-      {mode === "linePlane" && (
+      <div className="readout-header">
+        <p className="readout-eyebrow">Live readout</p>
+        {supportsFormulas && (
+          <button
+            type="button"
+            className="formulas-toggle"
+            onClick={() => setShowFormulas((v) => !v)}
+          >
+            {showingFormulas ? "← Back" : "Show formulas"}
+          </button>
+        )}
+      </div>
+
+      {showingFormulas && mode === "lineLine" && <LineLineFormulasReadout lines={lineLineEntries} />}
+      {showingFormulas && mode === "linePlane" && (
+        <LinePlaneFormulasReadout lines={linePlaneLineEntries} planes={linePlanePlaneEntries} />
+      )}
+      {showingFormulas && mode === "planePlane" && <PlanePlaneFormulasReadout planes={planePlaneEntries} />}
+
+      {!showingFormulas && mode === "lineForms" && <LineFormsReadout line={line1} />}
+      {!showingFormulas && mode === "planeForms" && <PlaneFormsReadout plane={plane1} />}
+      {!showingFormulas && mode === "linePlane" && (
         <LinePlaneReadout lines={linePlaneLineEntries} planes={linePlanePlaneEntries} view={linePlaneView} />
       )}
-      {mode === "lineLine" && <LineLineReadout lines={lineLineEntries} view={lineLineView} />}
-      {mode === "planePlane" && <PlanePlaneReadout planes={planePlaneEntries} view={planePlaneView} />}
+      {!showingFormulas && mode === "lineLine" && <LineLineReadout lines={lineLineEntries} view={lineLineView} />}
+      {!showingFormulas && mode === "planePlane" && (
+        <PlanePlaneReadout planes={planePlaneEntries} view={planePlaneView} />
+      )}
       {mode === "pointLine" && (
         <PointLineReadout point={point1} line={line1} view={pointLineView} />
       )}

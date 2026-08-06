@@ -1,4 +1,7 @@
+import { useState } from "react";
 import NumberLineInput from "../vectorcomponents/NumberLineInput";
+import { subtract, normalize } from "./geometry3D.js";
+import { crossProduct } from "../vectorcomponents/vectorMath.js";
 import "../vectorcomponents/ControlPanel.css";
 import "./ControlPanel3D.css";
 
@@ -89,24 +92,94 @@ function ShowToggle({ options, value, onChange }) {
   );
 }
 
+// Exercise 2.1(c): a plane can also be defined by 3 points P1, P2, P3 —
+// m1 = P2-P1 and m2 = P3-P1 are two vectors parallel to the plane, so
+// n = m1 x m2. P2/P3 are UI-only state: the plane itself is always stored
+// as { point, normal } regardless of how it was authored, so every other
+// reader of plane data (relationships, reflections, Scene3D) needs no
+// changes at all.
 function PlaneInputs({ label, color, plane, onChange }) {
+  const [inputMode, setInputMode] = useState("normal"); // "normal" | "points"
+  const [p2, setP2] = useState({ x: plane.point.x + 1, y: plane.point.y, z: plane.point.z });
+  const [p3, setP3] = useState({ x: plane.point.x, y: plane.point.y + 1, z: plane.point.z });
+
+  const applyPoints = (p1, nextP2, nextP3) => {
+    const normal = normalize(crossProduct(subtract(nextP2, p1), subtract(nextP3, p1)));
+    onChange({ ...plane, point: p1, normal });
+  };
+
   return (
     <div className="entity-group">
       <p className="entity-title" style={{ color }}>
         {label}
       </p>
-      <ColumnInput
-        label="a"
-        color={color}
-        vector={plane.point}
-        onChange={(p) => onChange({ ...plane, point: p })}
-      />
-      <ColumnInput
-        label="n"
-        color={color}
-        vector={plane.normal}
-        onChange={(n) => onChange({ ...plane, normal: n })}
-      />
+
+      <div className="shape-toggle">
+        <p className="shape-toggle-label">Define via</p>
+        <div className="shape-toggle-buttons">
+          <button
+            type="button"
+            className={inputMode === "normal" ? "is-active" : ""}
+            onClick={() => setInputMode("normal")}
+          >
+            Point + normal
+          </button>
+          <button
+            type="button"
+            className={inputMode === "points" ? "is-active" : ""}
+            onClick={() => {
+              setInputMode("points");
+              applyPoints(plane.point, p2, p3);
+            }}
+          >
+            3 points
+          </button>
+        </div>
+      </div>
+
+      {inputMode === "normal" ? (
+        <>
+          <ColumnInput
+            label="a"
+            color={color}
+            vector={plane.point}
+            onChange={(p) => onChange({ ...plane, point: p })}
+          />
+          <ColumnInput
+            label="n"
+            color={color}
+            vector={plane.normal}
+            onChange={(n) => onChange({ ...plane, normal: n })}
+          />
+        </>
+      ) : (
+        <>
+          <ColumnInput
+            label="P₁"
+            color={color}
+            vector={plane.point}
+            onChange={(p1) => applyPoints(p1, p2, p3)}
+          />
+          <ColumnInput
+            label="P₂"
+            color={color}
+            vector={p2}
+            onChange={(next) => {
+              setP2(next);
+              applyPoints(plane.point, next, p3);
+            }}
+          />
+          <ColumnInput
+            label="P₃"
+            color={color}
+            vector={p3}
+            onChange={(next) => {
+              setP3(next);
+              applyPoints(plane.point, p2, next);
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -378,6 +451,7 @@ export default function ControlPanel3D({
                 { key: "relationship", label: "Relationship" },
                 { key: "addition", label: "Addition" },
                 { key: "cross", label: "Cross Product" },
+                { key: "reflection", label: "Reflection" },
               ]}
             />
           </>

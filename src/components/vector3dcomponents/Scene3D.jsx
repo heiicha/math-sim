@@ -6,6 +6,7 @@ import {
   lineLineRelationship,
   planePlaneRelationship,
   reflectLineAcrossPlane,
+  reflectLineAcrossLine,
   reflectPlaneAcrossPlane,
   reflectPointAcrossPlane,
   reflectPointAcrossLine,
@@ -753,7 +754,8 @@ export default function Scene3D({
         ...(line3 ? [{ key: "line3", data: line3, color: colors.entity3 }] : []),
         ...(line4 ? [{ key: "line4", data: line4, color: colors.entity4 }] : []),
       ];
-      const isRelationshipView = lineLineView !== "addition" && lineLineView !== "cross";
+      const isRelationshipView =
+        lineLineView !== "addition" && lineLineView !== "cross" && lineLineView !== "reflection";
 
       // Every pair's relationship, computed once — reused both to size each
       // line's drawn reach (so it visibly meets whatever it intersects, or
@@ -819,6 +821,15 @@ export default function Scene3D({
         addParallelogram(group, anchor, lineEntries[0].data.direction, lineEntries[1].data.direction, colors.result);
         const cross = crossProduct(lineEntries[0].data.direction, lineEntries[1].data.direction);
         addArrow(group, anchor, cross, colors.result, 1.6);
+      } else if (lineLineView === "reflection") {
+        // reflect every other line across the base line (line1)
+        const mirror = lineEntries[0].data;
+        lineEntries.slice(1).forEach((entry) => {
+          const reflected = reflectLineAcrossLine(entry.data, mirror);
+          addInfiniteLine(group, reflected, colors.result, 1, false);
+          addPoint(group, reflected.point, colors.result, 0.13);
+          addArrow(group, reflected.point, reflected.direction, colors.result, 1.6);
+        });
       } else {
         pairs.forEach((pr) => {
           // arcs use the acute-side direction for b, matching angleDeg's

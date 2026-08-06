@@ -81,7 +81,7 @@ function Vectors2() {
 
   const [planePlaneView, setPlanePlaneView] = useState("angle"); // "angle" | "distance" | "reflection"
   const [linePlaneView, setLinePlaneView] = useState("relationship"); // "relationship" | "reflection"
-  const [lineLineView, setLineLineView] = useState("relationship"); // "relationship" | "addition" | "cross"
+  const [lineLineView, setLineLineView] = useState("relationship"); // "relationship" | "addition" | "cross" | "reflection"
   const [pointLineView, setPointLineView] = useState("distance"); // "distance" | "reflection"
   const [pointPlaneView, setPointPlaneView] = useState("distance"); // "distance" | "reflection"
 

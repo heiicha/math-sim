@@ -160,3 +160,41 @@
 .relation-degenerate {
   color: var(--vec-a);
 }
+
+.formula-box {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 14px 0 0;
+  background: var(--panel-raised);
+}
+
+.formula-box:first-child {
+  margin-top: 0;
+}
+
+.formula-box-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin: 0 0 6px;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+
+.formula-box-formula {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--result);
+  margin: 0;
+}
+
+.formula-box .result-row {
+  border-top: 1px dashed var(--line);
+  margin-top: 8px;
+}
+
+.formula-box .note {
+  margin: 8px 0 0;
+}

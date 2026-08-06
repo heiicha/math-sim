@@ -55,8 +55,31 @@ export function add(a, b) {
   return { x: a.x + b.x, y: a.y + b.y, z: (a.z || 0) + (b.z || 0) };
 }
 
+export function subtract(a, b) {
+  return { x: a.x - b.x, y: a.y - b.y, z: (a.z || 0) - (b.z || 0) };
+}
+
 export function toDegrees(radians) {
   return (radians * 180) / Math.PI;
+}
+
+export function normalize(v) {
+  const m = magnitude(v);
+  if (m < 1e-9) return { x: 0, y: 0, z: 0 };
+  return { x: v.x / m, y: v.y / m, z: (v.z || 0) / m };
+}
+
+const REL_EPS = 1e-6;
+
+// "parallel" / "perpendicular" / "neither" / "degenerate" — Results 2.4,
+// 3.5 and 4.3 from the Vectors I notes, tested numerically via cross/dot.
+export function vectorRelationship(a, b) {
+  const magA = magnitude(a);
+  const magB = magnitude(b);
+  if (magA < REL_EPS || magB < REL_EPS) return "degenerate";
+  if (magnitude(crossProduct(a, b)) < REL_EPS * magA * magB) return "parallel";
+  if (Math.abs(dot(a, b)) < REL_EPS * magA * magB) return "perpendicular";
+  return "neither";
 }
 
 export function sectionFormula(A, B, m, n) {

@@ -162,6 +162,9 @@ export default function ControlPanel({
         {mode === "addition" && (
           <ExtraVectors vecC={vecC} setVecC={setVecC} vecD={vecD} setVecD={setVecD} />
         )}
+        {mode === "collinear" && vecC && (
+          <ColumnVectorInput label="c" color="var(--vec-c)" vector={vecC} onChange={setVecC} />
+        )}
       </div>
 
       {mode === "cross" && (

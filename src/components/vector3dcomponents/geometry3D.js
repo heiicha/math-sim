@@ -200,6 +200,36 @@ export function planePlaneRelationship(plane1, plane2) {
   };
 }
 
+// Relationship between three planes (§4.5, marked "optional" in the notes,
+// but the UI already supports 3-4 planes at once). Reduces to two calls on
+// the pairwise relationship functions above: first find where planes 1 & 2
+// meet, then see how that result relates to plane 3.
+export function threePlanesRelationship(plane1, plane2, plane3) {
+  const rel12 = planePlaneRelationship(plane1, plane2);
+  if (rel12.type === "degenerate") return { type: "degenerate" };
+
+  if (rel12.type === "parallel") {
+    // Distinct parallel planes 1 & 2 already share no point.
+    return { type: "none" };
+  }
+
+  if (rel12.type === "same") {
+    // Planes 1 & 2 coincide — reduces to a two-plane problem against plane 3.
+    const rel13 = planePlaneRelationship(plane1, plane3);
+    if (rel13.type === "degenerate") return { type: "degenerate" };
+    if (rel13.type === "same") return { type: "samePlane" };
+    if (rel13.type === "parallel") return { type: "none" };
+    return { type: "line", line: rel13.line };
+  }
+
+  // Planes 1 & 2 meet along a line — see how plane 3 relates to that line.
+  const relLine3 = linePlaneRelationship(rel12.line, plane3);
+  if (relLine3.type === "degenerate") return { type: "degenerate" };
+  if (relLine3.type === "contained") return { type: "line", line: rel12.line };
+  if (relLine3.type === "parallel") return { type: "none" };
+  return { type: "point", point: relLine3.point };
+}
+
 // ---- Point & Line -----------------------------------------------------
 
 // Foot of the perpendicular, N, from a point to the line r = a + λm — via
@@ -225,6 +255,20 @@ export function reflectPointAcrossLine(point, line) {
   const foot = footOfPerpendicularToLine(point, line);
   if (!foot) return point;
   return subtract(scale(foot, 2), point);
+}
+
+// Reflection of a line in a line (§4.4): reflect two points of the line
+// across the mirror line (each via reflectPointAcrossLine) and rebuild the
+// line from the reflected pair — works whether or not the lines meet.
+export function reflectLineAcrossLine(line, mirror) {
+  const A = line.point;
+  const B = add(line.point, line.direction);
+  const Aprime = reflectPointAcrossLine(A, mirror);
+  const Bprime = reflectPointAcrossLine(B, mirror);
+  return {
+    point: Aprime,
+    direction: subtract(Bprime, Aprime),
+  };
 }
 
 // ---- Point & Plane ------------------------------------------------------

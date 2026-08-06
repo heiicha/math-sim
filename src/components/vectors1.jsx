@@ -19,6 +19,10 @@ export const MODES = {
     label: "Addition",
     tagline: "Either tip-to-tail or will form the diagonal of a parallelogram",
   },
+  subtraction: {
+    label: "Subtraction",
+    tagline: "The displacement vector from a's tip to b's tip, when both are drawn from the same point: b − a.",
+  },
   projection: {
     label: "Projection",
     tagline: "The shadow a casts onto b",
@@ -26,6 +30,10 @@ export const MODES = {
   ratio: {
     label: "Ratio Theorem",
     tagline: "Where a point sits between A and B",
+  },
+  collinear: {
+    label: "Collinearity",
+    tagline: "Are A, B and C all on one straight line? AB = λBC for some real scalar λ.",
   },
 };
 
@@ -40,6 +48,15 @@ function Vectors1() {
 
   const [crossShape, setCrossShape] = useState("parallelogram"); // "parallelogram" | "triangle"
   const [ratio, setRatio] = useState({ lambda: 1, mu: 1 });
+
+  // Collinearity needs a third point C — auto-add it (if not already
+  // present from Addition mode) the moment the student switches in.
+  const handleModeChange = (key) => {
+    setMode(key);
+    if (key === "collinear" && !vecC) {
+      setVecC({ tail: { x: 0, y: 0, z: 0 }, head: { x: -1, y: 3, z: 2 } });
+    }
+  };
   const componentsOf = (v) => ({
     x: v.head.x - v.tail.x,
     y: v.head.y - v.tail.y,
@@ -104,7 +121,7 @@ function Vectors1() {
             <button
               key={key}
               className={`mode-tab ${mode === key ? "is-active" : ""}`}
-              onClick={() => setMode(key)}
+              onClick={() => handleModeChange(key)}
               aria-pressed={mode === key}
             >
               {m.label}
@@ -121,6 +138,7 @@ function Vectors1() {
             vecD={componentsD}
             pointA={vecA.head}
             pointB={vecB.head}
+            pointC={vecC ? vecC.head : null}
             crossShape={crossShape}
             ratio={ratio}
           />

@@ -153,11 +153,13 @@
 
 .shape-toggle-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
 .shape-toggle-buttons button {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 88px;
   background: var(--panel-raised);
   border: 1px solid var(--line);
   color: var(--text-dim);
