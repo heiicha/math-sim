@@ -2,9 +2,12 @@
   --ink: #F4F5F8;
   --panel: #D9D9D9  ;
   --panel-raised: #fdfdfd4a;
+  --surface: #ffffff;
   --line: #00000003;
-  --grid-line: rgba(99, 99, 99, 0.077);
+  --grid-line: rgba(99, 99, 99, 0.09);
   --canvas-bg: #ffffff;
+  --canvas-grid: rgba(4, 4, 4, 0.15);
+  --canvas-axis: rgb(0, 0, 0);
   --text: #000000;
   --text-dim: #3a3a3a;
   --vec-a: #E96B6A;
@@ -19,6 +22,36 @@
   --font-body: "Noto Sans", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --font-hand: "Droid Sans", sans-serif;
+
+  color-scheme: light;
+}
+
+/* Dark mode is almost entirely additive: nearly every value above already
+   drives the whole app (tool pages included) via var(--...), so overriding
+   them here covers most of the dark theme. The one place that still needed
+   a code change is VectorCanvas.jsx's readColors(), which used to hardcode
+   the p5 canvas grid/axis colors instead of reading them from here. */
+:root[data-theme="dark"] {
+  --ink: #0B0F17;
+  --panel: #161B26;
+  --panel-raised: #1f2530cc;
+  --surface: #141924;
+  --line: rgba(255, 255, 255, 0.09);
+  --grid-line: rgba(255, 255, 255, 0.055);
+  --canvas-bg: #12161f;
+  --canvas-grid: rgba(255, 255, 255, 0.12);
+  --canvas-axis: rgb(225, 230, 238);
+  --text: #F0F2F6;
+  --text-dim: #9AA4B2;
+  --vec-a: #FF8A87;
+  --vec-b: #82A6FF;
+  --vec-c: #7BD08A;
+  --vec-d: #F0B75A;
+  --result: #B58AF0;
+  --accent: #5B8DFF;
+  --margin-rule: #4A5568;
+
+  color-scheme: dark;
 }
 
 * {
@@ -32,6 +65,7 @@ body {
   background: var(--ink);
   color: var(--text);
   font-family: var(--font-body);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 #root {
@@ -39,10 +73,8 @@ body {
 }
 
 body {
-  background-image:
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-  background-size: 28px 28px;
+  background-image: radial-gradient(var(--grid-line) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
 }
 
 ::selection {

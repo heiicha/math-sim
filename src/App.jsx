@@ -5,6 +5,7 @@ import Vectors1 from "./components/vectors1";
 import Vectors2 from "./components/vectors2";
 import FeedbackButton from "./components/feedback";
 import HomeButton from "./components/HomeButton";
+import ThemeToggle from "./components/ThemeToggle";
 import "./components/corner-buttons.css";
 
 export default function App() {
@@ -22,6 +23,9 @@ export default function App() {
       </div>
       <div className="corner-button corner-button-right">
         <HomeButton />
+      </div>
+      <div className="corner-button corner-button-top-right">
+        <ThemeToggle />
       </div>
     </>
   );

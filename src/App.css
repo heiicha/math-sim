@@ -93,12 +93,11 @@
   border-radius: 999px;
   padding: 14px 40px;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease;
 }
 
 .landing-start:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(87, 232, 196, 0.25);
 }
 
 .landing-start:active {

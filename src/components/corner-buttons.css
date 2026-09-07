@@ -11,3 +11,9 @@
 .corner-button-right {
   right: 20px;
 }
+
+.corner-button-top-right {
+  top: 20px;
+  right: 20px;
+  bottom: auto;
+}

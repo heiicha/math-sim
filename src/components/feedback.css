@@ -9,7 +9,7 @@
     border: none;
     padding: 0.7rem 1.4rem;
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: transform 0.15s ease;
 }
 
 .feedback-button:hover {

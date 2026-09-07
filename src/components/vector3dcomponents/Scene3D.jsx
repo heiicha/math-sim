@@ -17,6 +17,7 @@ import {
   closestPointsOnSkewLines,
 } from "./geometry3D.js";
 import { magnitude, dot, perpendicularComponent, crossProduct, add } from "../vectorcomponents/vectorMath.js";
+import { useTheme } from "../../theme.jsx";
 import "./Scene3D.css";
 
 const LINE_REACH = 7; // how far each drawn line extends past its defining point
@@ -401,6 +402,10 @@ export default function Scene3D({
   pointPlaneView,
 }) {
   const containerRef = useRef(null);
+  // Consuming theme (a) forces a re-render on toggle, which re-runs the
+  // no-deps "rebuild dynamic content" effect below with fresh readColors(),
+  // and (b) drives the dedicated background-color effect further down.
+  const { theme } = useTheme();
   const state = {
     mode,
     line1,
@@ -649,6 +654,13 @@ export default function Scene3D({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // scene.background is set once at mount above (from CSS at that instant);
+  // this keeps it in sync whenever the theme toggles afterwards.
+  useEffect(() => {
+    if (!sceneRef.current) return;
+    sceneRef.current.background = new THREE.Color(readColors().canvasBg);
+  }, [theme]);
 
   // rebuild the mode-specific content whenever anything relevant changes
   useEffect(() => {

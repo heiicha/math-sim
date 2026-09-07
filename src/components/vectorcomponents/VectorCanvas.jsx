@@ -52,8 +52,8 @@ function readColors() {
     text: get("--text") || "#e9f0f7",
     dim: get("--text-dim") || "#7f95ac",
     canvasBg: get("--canvas-bg") || "#5e6770",
-    grid: "rgba(4, 4, 4, 0.15)",
-    axis: "rgb(0, 0, 0)",
+    grid: get("--canvas-grid") || "rgba(4, 4, 4, 0.15)",
+    axis: get("--canvas-axis") || "rgb(0, 0, 0)",
     negative: "#ff6347",
   };
 }
@@ -114,6 +114,9 @@ export default function VectorCanvas({
       }
 
       p.draw = () => {
+        // re-read every frame (cheap) so a dark-mode toggle takes effect
+        // immediately instead of leaving colors baked in from mount time
+        colors = readColors();
         const state = stateRef.current;
         const { mode, vecA, vecB, vecC, crossShape, ratio } = state;
         const origin = getOrigin();
