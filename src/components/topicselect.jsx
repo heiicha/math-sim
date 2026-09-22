@@ -49,6 +49,7 @@ function GraphTransformationsIcon() {
 const TOPICS = [
   { key: "vectors1", path: "/vectors1", label: "2D Vectors", icon: <Vectors2DIcon /> },
   { key: "vectors2", path: "/vectors2", label: "3D Vectors", icon: <Vectors3DIcon /> },
+  { key: "transformations", path: "/transformations", label: "Graph Transformations", icon: <GraphTransformationsIcon /> },
 ];
 
 export default function TopicSelect() {
@@ -78,14 +79,6 @@ export default function TopicSelect() {
               <span className="topic-card-label">{t.label}</span>
             </button>
           ))}
-
-          <div className="topic-card topic-card-disabled" aria-disabled="true">
-            <span className="topic-card-icon">
-              <GraphTransformationsIcon />
-            </span>
-            <span className="topic-card-label">Graph Transformations</span>
-            <span className="topic-card-soon">Coming soon</span>
-          </div>
         </div>
       </main>
     </div>
