@@ -26,6 +26,14 @@
   margin: 0 0 36px;
 }
 
+.topic-category {
+  width: 100%;
+}
+
+.topic-category + .topic-category {
+  margin-top: 44px;
+}
+
 .topic-select-section {
   align-self: flex-start;
   font-family: var(--font-mono);

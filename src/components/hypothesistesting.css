@@ -1,0 +1,26 @@
+@import "./statscomponents/shared.css";
+
+.formulate-view {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 12px 4px;
+}
+
+.run-view {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.case-view {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.case-view .decision-table td,
+.case-view .decision-table th {
+  font-size: 0.8rem;
+  line-height: 1.4;
+}

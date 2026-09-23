@@ -56,49 +56,12 @@
   margin: 0;
 }
 
-/* Note-formatted step sentences (the dropdown+input fill-in-the-blank) */
+/* Note-formatted step sentences (the dropdown+input fill-in-the-blank) use
+   the shared .step-sentence/.step-select/.step-number classes in layout.css. */
 
 .single-step {
   border-top: 1px solid var(--line);
   padding-top: 20px;
-}
-
-.step-sentence {
-  font-family: var(--font-body);
-  font-size: 1rem;
-  line-height: 2.1;
-  color: var(--text);
-  margin: 0;
-}
-
-.step-subject {
-  font-family: var(--font-display);
-  font-style: italic;
-  color: var(--text-dim);
-}
-
-.step-select,
-.step-number {
-  background: var(--panel-raised);
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  color: var(--accent);
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 0.95rem;
-  padding: 3px 6px;
-}
-
-.step-number {
-  width: 64px;
-  text-align: center;
-  -moz-appearance: textfield;
-}
-
-.step-number::-webkit-outer-spin-button,
-.step-number::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
 }
 
 /* Sandbox */
@@ -168,95 +131,8 @@
   margin: 0;
 }
 
-/* Readout panel */
-
-.readout-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.readout-eyebrow {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin: 0;
-}
-
-.readout-def {
-  font-size: 0.9rem;
-  color: var(--text-dim);
-  line-height: 1.55;
-  margin: 0;
-}
-
-.formula {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-size: 1.05rem;
-  color: var(--text);
-  margin: 4px 0;
-}
-
-.result-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-  border-top: 1px solid var(--line);
-  padding: 8px 0;
-  font-size: 0.9rem;
-  color: var(--text-dim);
-}
-
-.result-row strong {
-  font-family: var(--font-mono);
-  color: var(--accent);
-  font-size: 1rem;
-  text-align: right;
-}
-
-.result-row.is-highlighted {
-  color: var(--text);
-}
-
-.result-row.is-highlighted strong {
-  color: var(--result);
-  font-size: 1.1rem;
-}
-
-.note {
-  font-size: 0.88rem;
-  color: var(--text-dim);
-  line-height: 1.5;
-  margin: 10px 0 0;
-}
-
-.condition {
-  font-size: 0.85rem;
-  font-style: italic;
-  color: var(--text-dim);
-  line-height: 1.5;
-  margin: 10px 0 0;
-  padding: 8px 10px 8px 12px;
-  border-left: 2px solid var(--accent);
-  background: var(--panel-raised);
-}
-
-.condition-label {
-  display: block;
-  font-family: var(--font-mono);
-  font-style: normal;
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 4px;
-}
+/* Readout panel: shared .readout-panel/.readout-eyebrow/.readout-def/
+   .formula/.result-row/.note/.condition classes live in layout.css. */
 
 .sandbox-summary {
   margin: 4px 0 0;
@@ -269,10 +145,92 @@
   line-height: 1.5;
 }
 
-.sandbox-summary-replacement {
-  color: var(--text-dim);
+/* Equation chain: since the readout panel spans the full page width, we use
+   the room to lay out every intermediate equation left-to-right instead of
+   only stating the final one — each arrow is labelled with the variable
+   replacement that produced the next node. */
+
+.eq-chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0;
+  margin: 6px 0 4px;
+}
+
+.eq-chain-node {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--panel-raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 14px;
+  min-width: 120px;
+}
+
+.eq-chain-node.is-final {
+  border-color: var(--result);
+  background: color-mix(in srgb, var(--result) 12%, var(--panel-raised));
+}
+
+.eq-chain-node-label {
   font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.eq-chain-node.is-final .eq-chain-node-label {
+  color: var(--result);
+}
+
+.eq-chain-node-eq {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.eq-chain-node.is-final .eq-chain-node-eq {
+  color: var(--result);
+  font-weight: 600;
+}
+
+.eq-chain-link {
+  flex: 1 1 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px 10px;
+  min-width: 110px;
+}
+
+.eq-chain-link-replacement {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--accent);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.eq-chain-link-glyph {
+  font-size: 1.1rem;
+  color: var(--text-dim);
+  line-height: 1;
+}
+
+.eq-chain-link-desc {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.35;
+  max-width: 220px;
 }
 
 /* Shared "add/remove entity" affordance, matching vectors' control panels */

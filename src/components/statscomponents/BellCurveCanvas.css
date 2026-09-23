@@ -1,0 +1,6 @@
+.bell-curve-canvas {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  line-height: 0;
+}

@@ -1,0 +1,327 @@
+@import "../layout.css";
+
+/* Shared control-panel primitives for the Statistics topics (Permutations &
+   Combinations, Normal Distribution, Hypothesis Testing). Each topic's own
+   stylesheet handles page-specific layout; this file only holds the
+   generic, reusable widgets (sliders, segmented controls, stat pills,
+   decision tables, callout boxes) so the three pages look like one family
+   instead of three independent designs. */
+
+.control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  width: 360px;
+  flex: none;
+}
+
+@media (max-width: 640px) {
+  .control-panel {
+    width: 100%;
+  }
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.control-group + .control-group {
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.control-group-title {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 1.02rem;
+  margin: 0;
+}
+
+/* Slider field */
+
+.slider-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.slider-field-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.85rem;
+}
+
+.slider-field-label {
+  color: var(--text-dim);
+}
+
+.slider-field-value {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.slider-field-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  margin: 0;
+  background: var(--panel-raised);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.slider-field-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--panel-raised);
+}
+
+.slider-field-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: var(--sf-color, var(--accent));
+  border: 2px solid var(--panel);
+  cursor: grab;
+}
+
+.slider-field-range:active::-webkit-slider-thumb {
+  cursor: grabbing;
+}
+
+.slider-field-range::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--panel-raised);
+}
+
+.slider-field-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--sf-color, var(--accent));
+  border: 2px solid var(--panel);
+  cursor: grab;
+}
+
+/* Segmented control */
+
+.segmented-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.segmented-control {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.segmented-option {
+  flex: 1 1 auto;
+  background: var(--panel-raised);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 7px 10px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+}
+
+.segmented-option:hover {
+  color: var(--text);
+}
+
+.segmented-option.is-active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel-raised));
+}
+
+/* Plain numeric / text field, matching transformations' equation-field look */
+
+.stat-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stat-field-label {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.stat-input {
+  background: var(--panel-raised);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.98rem;
+  padding: 8px 10px;
+  width: 100%;
+}
+
+/* Stat pill: pass/fail-style badge (reject / do not reject H0, valid word, etc.) */
+
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.03em;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel-raised);
+  color: var(--text-dim);
+}
+
+.stat-pill.is-positive {
+  color: var(--result);
+  border-color: var(--result);
+  background: color-mix(in srgb, var(--result) 14%, var(--panel-raised));
+}
+
+.stat-pill.is-negative {
+  color: #e96b6a;
+  border-color: #e96b6a;
+  background: color-mix(in srgb, #e96b6a 14%, var(--panel-raised));
+}
+
+/* Canvas legend chips */
+
+.canvas-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.canvas-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.canvas-legend-swatch {
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.canvas-legend-swatch.is-dashed {
+  background: repeating-linear-gradient(to right, var(--text-dim) 0 4px, transparent 4px 7px);
+}
+
+/* Decision table (used by the P&C strategy explorer and the Hypothesis
+   Testing case explorer to mirror the notes' summary tables) */
+
+.decision-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.decision-table th,
+.decision-table td {
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.decision-table th {
+  background: var(--panel-raised);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.decision-table td.is-active,
+.decision-table th.is-active {
+  background: color-mix(in srgb, var(--accent) 16%, var(--panel-raised));
+  color: var(--text);
+}
+
+.decision-table-wrap {
+  overflow-x: auto;
+}
+
+/* Shared "add/remove entity" affordance, matching transformations'/vectors'
+   control panels (build up a list of tasks/steps/items). */
+
+.remove-entity-button {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.remove-entity-button:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.add-entity-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px dashed var(--margin-rule);
+  border-radius: 8px;
+  color: var(--text-dim);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 10px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.add-entity-button:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.add-entity-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.add-entity-row .add-entity-button {
+  flex: 1 1 auto;
+  min-width: 90px;
+}

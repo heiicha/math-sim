@@ -89,3 +89,137 @@
 .page-nav-link:hover {
   border-bottom-color: var(--accent);
 }
+
+/* Shared readout panel + note-formatted sentence styles. Originally
+   Transformations-only; promoted here so every topic page (Vectors,
+   Transformations, the Statistics topics) can reuse the same "definition /
+   formula / resultant value" readout language without duplicating CSS. */
+
+.readout-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.readout-eyebrow {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0;
+}
+
+.readout-def {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.formula {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.05rem;
+  color: var(--text);
+  margin: 4px 0;
+}
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding: 8px 0;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.result-row strong {
+  font-family: var(--font-mono);
+  color: var(--accent);
+  font-size: 1rem;
+  text-align: right;
+}
+
+.result-row.is-highlighted {
+  color: var(--text);
+}
+
+.result-row.is-highlighted strong {
+  color: var(--result);
+  font-size: 1.1rem;
+}
+
+.note {
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin: 10px 0 0;
+}
+
+.condition {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin: 10px 0 0;
+  padding: 8px 10px 8px 12px;
+  border-left: 2px solid var(--accent);
+  background: var(--panel-raised);
+}
+
+.condition-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+/* Note-formatted "fill in the blank" sentence, e.g. step descriptions or
+   hypothesis statements built from dropdowns/number inputs. */
+
+.step-sentence {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 2.1;
+  color: var(--text);
+  margin: 0;
+}
+
+.step-subject {
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--text-dim);
+}
+
+.step-select,
+.step-number {
+  background: var(--panel-raised);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 3px 6px;
+}
+
+.step-number {
+  width: 64px;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.step-number::-webkit-outer-spin-button,
+.step-number::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

@@ -46,10 +46,92 @@ function GraphTransformationsIcon() {
   );
 }
 
-const TOPICS = [
-  { key: "vectors1", path: "/vectors1", label: "2D Vectors", icon: <Vectors2DIcon /> },
-  { key: "vectors2", path: "/vectors2", label: "3D Vectors", icon: <Vectors3DIcon /> },
-  { key: "transformations", path: "/transformations", label: "Graph Transformations", icon: <GraphTransformationsIcon /> },
+function PermutationsIcon() {
+  return (
+    <svg viewBox="0 0 100 70" width="56" height="40" aria-hidden="true">
+      <g>
+        <circle cx="20" cy="18" r="12" fill="none" stroke="#E96B6A" strokeWidth="2" />
+        <text x="20" y="23" textAnchor="middle" fontSize="13" fontFamily="var(--font-mono)" fill="#E96B6A">A</text>
+        <circle cx="50" cy="18" r="12" fill="none" stroke="#6990E4" strokeWidth="2" />
+        <text x="50" y="23" textAnchor="middle" fontSize="13" fontFamily="var(--font-mono)" fill="#6990E4">B</text>
+        <circle cx="80" cy="18" r="12" fill="none" stroke="#e0a23d" strokeWidth="2" />
+        <text x="80" y="23" textAnchor="middle" fontSize="13" fontFamily="var(--font-mono)" fill="#e0a23d">C</text>
+      </g>
+      <path d="M 30 40 Q 50 56 70 40" stroke="var(--text-dim)" strokeWidth="1.6" fill="none" markerEnd="url(#pc-arrow)" />
+      <defs>
+        <marker id="pc-arrow" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="var(--text-dim)" />
+        </marker>
+      </defs>
+      <g>
+        <circle cx="30" cy="58" r="9" fill="none" stroke="#6990E4" strokeWidth="2" />
+        <text x="30" y="62" textAnchor="middle" fontSize="10" fontFamily="var(--font-mono)" fill="#6990E4">B</text>
+        <circle cx="55" cy="58" r="9" fill="none" stroke="#E96B6A" strokeWidth="2" />
+        <text x="55" y="62" textAnchor="middle" fontSize="10" fontFamily="var(--font-mono)" fill="#E96B6A">A</text>
+        <circle cx="80" cy="58" r="9" fill="none" stroke="#e0a23d" strokeWidth="2" />
+        <text x="80" y="62" textAnchor="middle" fontSize="10" fontFamily="var(--font-mono)" fill="#e0a23d">C</text>
+      </g>
+    </svg>
+  );
+}
+
+function NormalDistributionIcon() {
+  return (
+    <svg viewBox="0 0 100 70" width="56" height="40" aria-hidden="true">
+      <line x1="8" y1="60" x2="92" y2="60" stroke="var(--text-dim)" strokeWidth="1.4" />
+      <line x1="50" y1="8" x2="50" y2="60" stroke="var(--text-dim)" strokeDasharray="3,3" strokeWidth="1.2" />
+      <path
+        d="M 10 59 C 25 59 32 12 50 12 C 68 12 75 59 90 59"
+        stroke="#996ae9"
+        strokeWidth="2.4"
+        fill="none"
+      />
+      <path
+        d="M 34 59 C 40 59 44 32 50 32 C 56 32 60 59 66 59 Z"
+        fill="#996ae9"
+        opacity="0.28"
+      />
+    </svg>
+  );
+}
+
+function HypothesisTestingIcon() {
+  return (
+    <svg viewBox="0 0 100 70" width="56" height="40" aria-hidden="true">
+      <line x1="8" y1="60" x2="92" y2="60" stroke="var(--text-dim)" strokeWidth="1.4" />
+      <path
+        d="M 10 59 C 25 59 32 14 44 14 C 56 14 60 59 90 59"
+        stroke="#6990E4"
+        strokeWidth="2.4"
+        fill="none"
+      />
+      <path
+        d="M 68 59 L 68 30 C 76 40 82 50 88 59 Z"
+        fill="#E96B6A"
+        opacity="0.55"
+      />
+      <line x1="68" y1="10" x2="68" y2="60" stroke="#E96B6A" strokeWidth="1.6" strokeDasharray="3,3" />
+    </svg>
+  );
+}
+
+const CATEGORIES = [
+  {
+    title: "Pure Maths",
+    topics: [
+      { key: "vectors1", path: "/vectors1", label: "2D Vectors", icon: <Vectors2DIcon /> },
+      { key: "vectors2", path: "/vectors2", label: "3D Vectors", icon: <Vectors3DIcon /> },
+      { key: "transformations", path: "/transformations", label: "Graph Transformations", icon: <GraphTransformationsIcon /> },
+    ],
+  },
+  {
+    title: "Statistics",
+    topics: [
+      { key: "permutations", path: "/permutations", label: "Permutations & Combinations", icon: <PermutationsIcon /> },
+      { key: "normaldistribution", path: "/normaldistribution", label: "Normal Distribution", icon: <NormalDistributionIcon /> },
+      { key: "hypothesistesting", path: "/hypothesistesting", label: "Hypothesis Testing", icon: <HypothesisTestingIcon /> },
+    ],
+  },
 ];
 
 export default function TopicSelect() {
@@ -70,16 +152,20 @@ export default function TopicSelect() {
       <main className="topic-select-main">
         <p className="landing-eyebrow">SIMULATIONS &amp; PLAYGROUND</p>
         <h1 className="topic-select-title">TOPICS AVAILABLE</h1>
-        <p className="topic-select-section">Pure Maths</p>
 
-        <div className="topic-grid">
-          {TOPICS.map((t) => (
-            <button key={t.key} className="topic-card" onClick={() => navigateWithTransition(navigate, t.path)}>
-              <span className="topic-card-icon">{t.icon}</span>
-              <span className="topic-card-label">{t.label}</span>
-            </button>
-          ))}
-        </div>
+        {CATEGORIES.map((category) => (
+          <section key={category.title} className="topic-category">
+            <p className="topic-select-section">{category.title}</p>
+            <div className="topic-grid">
+              {category.topics.map((t) => (
+                <button key={t.key} className="topic-card" onClick={() => navigateWithTransition(navigate, t.path)}>
+                  <span className="topic-card-icon">{t.icon}</span>
+                  <span className="topic-card-label">{t.label}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        ))}
       </main>
     </div>
   );

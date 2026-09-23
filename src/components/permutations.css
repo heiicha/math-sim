@@ -1,0 +1,252 @@
+@import "./statscomponents/shared.css";
+
+/* Counting principles: task rows in the control panel */
+
+.counting-task-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.counting-task-label {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.counting-task-ways {
+  width: 64px;
+  flex: none;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.counting-task-ways::-webkit-outer-spin-button,
+.counting-task-ways::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Counting principles: visual */
+
+.counting-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.counting-visual-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px 12px;
+}
+
+.counting-visual-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.counting-operator {
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+.counting-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: var(--panel-raised);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 16px;
+  min-width: 88px;
+}
+
+.counting-chip-label {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-align: center;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.counting-chip-ways {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: var(--text);
+}
+
+.counting-chip.is-total {
+  border-color: var(--result);
+  background: color-mix(in srgb, var(--result) 14%, var(--panel-raised));
+}
+
+.counting-chip.is-total .counting-chip-ways {
+  color: var(--result);
+}
+
+.counting-visual-caption {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Permutations: slot-filling visual */
+
+.perm-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  align-items: center;
+  padding: 12px;
+}
+
+.slot-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.slot-box {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel-raised);
+  border: 1.5px solid var(--accent);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--accent);
+}
+
+.letter-freq-table {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.letter-freq-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: var(--panel-raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 14px;
+  min-width: 44px;
+}
+
+.letter-freq-letter {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.letter-freq-count {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--result);
+  font-weight: 700;
+}
+
+/* Circular permutations */
+
+.circular-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 8px;
+}
+
+.circular-edge {
+  stroke: var(--margin-rule);
+  stroke-width: 1.2;
+  fill: none;
+}
+
+.circular-node {
+  fill: var(--panel-raised);
+  stroke: var(--result);
+  stroke-width: 2;
+}
+
+.circular-node-label {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  fill: var(--text);
+}
+
+.circular-seat-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  fill: var(--text-dim);
+}
+
+.circular-direction-arrow {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.6;
+  stroke-dasharray: 3 3;
+}
+
+.circular-arrowhead-fill {
+  fill: var(--accent);
+}
+
+/* Combinations: Pascal's triangle */
+
+.pascal-triangle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 12px 4px;
+}
+
+.pascal-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.pascal-cell {
+  min-width: 34px;
+  padding: 4px 6px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  background: var(--panel-raised);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+
+.pascal-cell.is-highlighted {
+  color: var(--result);
+  border-color: var(--result);
+  background: color-mix(in srgb, var(--result) 16%, var(--panel-raised));
+  font-weight: 700;
+}
