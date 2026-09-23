@@ -36,8 +36,9 @@ export function applyStep(state, step) {
       // reflect in x-axis: replace y with -y  =>  y = -g(x)
       return { A: -A, B, C, D: -D };
     }
-    // reflect in y-axis: replace x with -x  =>  y = g(-x)
-    return { A, B: -B, C: -C, D };
+    // reflect in y-axis: replace x with -x  =>  y = g(-x) = A f(-Bx + C) + D
+    // (only B flips — C is a constant inside f and is untouched by x → -x)
+    return { A, B: -B, C, D };
   }
   return state;
 }

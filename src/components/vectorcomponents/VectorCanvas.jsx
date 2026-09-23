@@ -20,6 +20,9 @@ const UNIT = 42;
 const HANDLE_R = 8;
 const HIT_R = 16;
 const LINE_HIT_R = 8;
+// fingers are far less precise than a mouse cursor
+const TOUCH_HIT_R = 28;
+const TOUCH_LINE_HIT_R = 18;
 
 function distToSegment(px, py, x1, y1, x2, y2) {
   const dx = x2 - x1;
@@ -72,6 +75,7 @@ export default function VectorCanvas({
   ratio,
 }) {
   const containerRef = useRef(null);
+  const resetViewRef = useRef(() => {});
   const stateRef = useRef({ mode, vecA, vecB, setVecA, setVecB, vecC, setVecC, vecD, setVecD, crossShape, ratio });
   stateRef.current = { mode, vecA, vecB, setVecA, setVecB, vecC, setVecC, vecD, setVecD, crossShape, ratio };
 
@@ -84,6 +88,14 @@ export default function VectorCanvas({
     let pan = { x: 0, y: 0 };
     let colors = readColors();
     let p5Instance;
+    let hitTest = () => null;
+    let twoFingerPan = null;
+
+    const resetView = () => {
+      pan.x = 0;
+      pan.y = 0;
+    };
+    resetViewRef.current = resetView;
 
     const sketch = (p) => {
       const getOrigin = () => ({ x: p.width / 2 + pan.x, y: p.height / 2 + pan.y });
@@ -103,13 +115,17 @@ export default function VectorCanvas({
       };
 
       // The full list of vectors currently on screen: a and b always, plus
-      // c and/or d when the student has added them (Addition mode only).
+      // c and/or d when they exist AND the mode uses them — c in Addition and
+      // Collinearity, d in Addition only. They stay in state across modes so
+      // switching back restores them, but must not be drawn/draggable elsewhere.
       function getEntities(state) {
+        const showC = state.vecC && (state.mode === "addition" || state.mode === "collinear");
+        const showD = state.vecD && state.mode === "addition";
         return [
           { key: "a", vec: state.vecA, setVec: state.setVecA, color: colors.vecA, label: "a" },
           { key: "b", vec: state.vecB, setVec: state.setVecB, color: colors.vecB, label: "b" },
-          ...(state.vecC ? [{ key: "c", vec: state.vecC, setVec: state.setVecC, color: colors.vecC, label: "c" }] : []),
-          ...(state.vecD ? [{ key: "d", vec: state.vecD, setVec: state.setVecD, color: colors.vecD, label: "d" }] : []),
+          ...(showC ? [{ key: "c", vec: state.vecC, setVec: state.setVecC, color: colors.vecC, label: "c" }] : []),
+          ...(showD ? [{ key: "d", vec: state.vecD, setVec: state.setVecD, color: colors.vecD, label: "d" }] : []),
         ];
       }
 
@@ -182,54 +198,64 @@ export default function VectorCanvas({
         for (let y = oy % UNIT; y < p.height; y += UNIT) p.line(0, y, p.width, y);
       }
 
-      p.mousePressed = () => {
-        if (p.mouseX < 0 || p.mouseX > p.width || p.mouseY < 0 || p.mouseY > p.height) return;
-        const state = stateRef.current;
-        const entities = getEntities(state);
+      // What sits under screen point (sx, sy): a tail/head handle, a vector's
+      // body, or nothing. Shared by mousePressed and the touchstart guard.
+      hitTest = (sx, sy, isTouch) => {
+        const hitR = isTouch ? TOUCH_HIT_R : HIT_R;
+        const lineHitR = isTouch ? TOUCH_LINE_HIT_R : LINE_HIT_R;
+        const entities = getEntities(stateRef.current);
         const origin = getOrigin();
-
-        const candidates = entities.flatMap((e) => [
-          { key: `${e.key}-tail`, pt: toScreen(e.vec.tail, origin) },
-          { key: `${e.key}-head`, pt: toScreen(e.vec.head, origin) },
-        ]);
 
         let closest = null;
         let closestDist = Infinity;
-        for (const c of candidates) {
-          const d = p.dist(p.mouseX, p.mouseY, c.pt.x, c.pt.y);
-          if (d <= HIT_R && d < closestDist) {
-            closest = c.key;
-            closestDist = d;
+        for (const e of entities) {
+          for (const part of ["tail", "head"]) {
+            const pt = toScreen(e.vec[part], origin);
+            const d = Math.hypot(sx - pt.x, sy - pt.y);
+            if (d <= hitR && d < closestDist) {
+              closest = { type: "handle", key: `${e.key}-${part}` };
+              closestDist = d;
+            }
           }
         }
+        if (closest) return closest;
 
-        if (closest) {
-          dragging = closest;
-          return;
-        }
-
-        let lineKey = null;
+        let lineHit = null;
         let lineDist = Infinity;
-        entities.forEach((e) => {
+        for (const e of entities) {
           const tailS = toScreen(e.vec.tail, origin);
           const headS = toScreen(e.vec.head, origin);
-          const d = distToSegment(p.mouseX, p.mouseY, tailS.x, tailS.y, headS.x, headS.y);
-          if (d <= LINE_HIT_R && d < lineDist) {
+          const d = distToSegment(sx, sy, tailS.x, tailS.y, headS.x, headS.y);
+          if (d <= lineHitR && d < lineDist) {
             lineDist = d;
-            lineKey = e.key;
+            lineHit = { type: "line", key: e.key, vec: e.vec };
           }
-        });
-        if (lineKey) {
-          const vec = entities.find((e) => e.key === lineKey).vec;
-          dragging = `${lineKey}-line`;
+        }
+        return lineHit;
+      };
+
+      p.mousePressed = (evt) => {
+        if (p.mouseX < 0 || p.mouseX > p.width || p.mouseY < 0 || p.mouseY > p.height) return;
+        const isTouch = evt?.pointerType === "touch";
+        const hit = hitTest(p.mouseX, p.mouseY, isTouch);
+
+        if (hit?.type === "handle") {
+          dragging = hit.key;
+          return;
+        }
+        if (hit?.type === "line") {
+          dragging = `${hit.key}-line`;
           lineDragStart = {
-            startWorld: toWorld(p.mouseX, p.mouseY, origin),
-            origTail: { ...vec.tail },
-            origHead: { ...vec.head },
+            startWorld: toWorld(p.mouseX, p.mouseY, getOrigin()),
+            origTail: { ...hit.vec.tail },
+            origHead: { ...hit.vec.head },
           };
           return;
         }
 
+        // on touch, a drag on empty canvas scrolls the page instead of
+        // panning — otherwise a full-width canvas would trap the phone user
+        if (isTouch) return;
         panning = true;
         panStart = { x: p.mouseX, y: p.mouseY, panX: pan.x, panY: pan.y };
       };
@@ -295,13 +321,51 @@ export default function VectorCanvas({
         panStart = null;
       };
 
-      p.doubleClicked = () => {
-        pan.x = 0;
-        pan.y = 0;
-      };
+      p.doubleClicked = resetView;
     };
 
     p5Instance = new p5(sketch, container);
+
+    // Touch devices start scrolling the page on a finger drag and cancel the
+    // pointer stream, so p5 never sees the drag. Block the scroll only when
+    // the finger lands on a vector — anywhere else the page scrolls normally.
+    // Two fingers pan the view (the touch stand-in for mouse-drag panning).
+    // (must be non-passive for preventDefault to take effect)
+    const midpoint = (touches) => ({
+      x: (touches[0].clientX + touches[1].clientX) / 2,
+      y: (touches[0].clientY + touches[1].clientY) / 2,
+    });
+    const onTouchStart = (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        // a second finger turns any in-progress vector drag into a pan
+        dragging = null;
+        lineDragStart = null;
+        const m = midpoint(e.touches);
+        twoFingerPan = { x: m.x, y: m.y, panX: pan.x, panY: pan.y };
+        return;
+      }
+      if (e.touches.length !== 1) return;
+      const canvas = p5Instance.canvas;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const t = e.touches[0];
+      if (hitTest(t.clientX - rect.left, t.clientY - rect.top, true)) e.preventDefault();
+    };
+    const onTouchMove = (e) => {
+      if (!twoFingerPan || e.touches.length !== 2) return;
+      e.preventDefault();
+      const m = midpoint(e.touches);
+      pan.x = twoFingerPan.panX + (m.x - twoFingerPan.x);
+      pan.y = twoFingerPan.panY + (m.y - twoFingerPan.y);
+    };
+    const onTouchEnd = (e) => {
+      if (e.touches.length < 2) twoFingerPan = null;
+    };
+    container.addEventListener("touchstart", onTouchStart, { passive: false });
+    container.addEventListener("touchmove", onTouchMove, { passive: false });
+    container.addEventListener("touchend", onTouchEnd);
+    container.addEventListener("touchcancel", onTouchEnd);
 
     const resizeObserver = new ResizeObserver(() => {
       if (!p5Instance) return;
@@ -312,13 +376,24 @@ export default function VectorCanvas({
     resizeObserver.observe(container);
 
     return () => {
+      container.removeEventListener("touchstart", onTouchStart);
+      container.removeEventListener("touchmove", onTouchMove);
+      container.removeEventListener("touchend", onTouchEnd);
+      container.removeEventListener("touchcancel", onTouchEnd);
       resizeObserver.disconnect();
       p5Instance.remove();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <div className="vector-canvas" ref={containerRef} />;
+  return (
+    <div className="canvas-wrap">
+      <div className="vector-canvas" ref={containerRef} />
+      <button type="button" className="canvas-reset" onClick={() => resetViewRef.current()}>
+        Reset view
+      </button>
+    </div>
+  );
 }
 
 function drawAxes(p, ox, oy, w, h, colors) {
@@ -419,10 +494,10 @@ function drawDotMode(p, vecA, vecB, aS, bS, ox, oy, colors) {
   p.textFont("'JetBrains Mono', monospace");
   p.textSize(16);
   p.textAlign(p.LEFT, p.TOP);
-  p.text(`a · b = ${value.toFixed(2)}`, 14, 14);
+  fitText(p, `a · b = ${value.toFixed(2)}`, 14, 14);
   p.fill(colors.dim);
   p.textSize(13);
-  p.text(`θ = ${degrees.toFixed(1)}°`, 14, 38);
+  fitText(p, `θ = ${degrees.toFixed(1)}°`, 14, 38);
   p.pop();
 }
 
@@ -470,11 +545,11 @@ function drawCrossMode(p, vecA, vecB, aS, bS, ox, oy, colors, crossShape) {
   p.textFont("'JetBrains Mono', monospace");
   p.textSize(15);
   p.textAlign(p.LEFT, p.TOP);
-  p.text(`a × b = ${c.x.toFixed(2)}i + ${c.y.toFixed(2)}j + ${c.z.toFixed(2)}k`, 14, 14);
+  fitText(p, `a × b = ${c.x.toFixed(2)}i + ${c.y.toFixed(2)}j + ${c.z.toFixed(2)}k`, 14, 14);
   p.fill(colors.dim);
   p.textSize(13);
-  p.text(`parallelogram area = ${parallelogramArea.toFixed(2)}`, 14, 36);
-  p.text(`triangle area = ${triangleArea.toFixed(2)}`, 14, 54);
+  fitText(p, `parallelogram area = ${parallelogramArea.toFixed(2)}`, 14, 36);
+  fitText(p, `triangle area = ${triangleArea.toFixed(2)}`, 14, 54);
   p.pop();
 }
 
@@ -531,14 +606,10 @@ function drawAdditionMode(p, entities, ox, oy, colors) {
   p.textFont("'JetBrains Mono', monospace");
   p.textSize(16);
   p.textAlign(p.LEFT, p.TOP);
-  p.text(
-    `${sumLabelSpaced} = ${result.x.toFixed(2)}i + ${result.y.toFixed(2)}j + ${result.z.toFixed(2)}k`,
-    14,
-    14
-  );
+  fitText(p, `${sumLabelSpaced} = ${result.x.toFixed(2)}i + ${result.y.toFixed(2)}j + ${result.z.toFixed(2)}k`, 14, 14);
   p.fill(colors.dim);
   p.textSize(13);
-  p.text(`|${sumLabel}| = ${magnitude(result).toFixed(2)}`, 14, 38);
+  fitText(p, `|${sumLabel}| = ${magnitude(result).toFixed(2)}`, 14, 38);
   p.pop();
 }
 
@@ -559,10 +630,10 @@ function drawSubtractionMode(p, vecA, vecB, aS, bS, ox, oy, colors) {
   p.textFont("'JetBrains Mono', monospace");
   p.textSize(15);
   p.textAlign(p.LEFT, p.TOP);
-  p.text(`b − a = ${diff.x.toFixed(2)}i + ${diff.y.toFixed(2)}j + ${diff.z.toFixed(2)}k`, 14, 14);
+  fitText(p, `b − a = ${diff.x.toFixed(2)}i + ${diff.y.toFixed(2)}j + ${diff.z.toFixed(2)}k`, 14, 14);
   p.fill(colors.dim);
   p.textSize(13);
-  p.text(`|b − a| = ${mag.toFixed(2)}`, 14, 34);
+  fitText(p, `|b − a| = ${mag.toFixed(2)}`, 14, 34);
   p.pop();
 }
 
@@ -594,21 +665,13 @@ function drawProjectionMode(p, vecA, vecB, aS, bS, ox, oy, colors) {
   p.textFont("'JetBrains Mono', monospace");
   p.textSize(15);
   p.textAlign(p.LEFT, p.TOP);
-  p.text(
-    `u = ${projVec.x.toFixed(2)}i + ${projVec.y.toFixed(2)}j + ${projVec.z.toFixed(2)}k`,
-    14,
-    14
-  );
+  fitText(p, `u = ${projVec.x.toFixed(2)}i + ${projVec.y.toFixed(2)}j + ${projVec.z.toFixed(2)}k`, 14, 14);
   p.fill(colors.dim);
   p.textSize(13);
-  p.text(`length of projection = ${scalarProj.toFixed(2)}`, 14, 34);
+  fitText(p, `length of projection = ${scalarProj.toFixed(2)}`, 14, 34);
   p.fill(colors.negative);
   p.textSize(15);
-  p.text(
-    `v = ${perp.x.toFixed(2)}i + ${perp.y.toFixed(2)}j + ${perp.z.toFixed(2)}k`,
-    14,
-    54
-  );
+  fitText(p, `v = ${perp.x.toFixed(2)}i + ${perp.y.toFixed(2)}j + ${perp.z.toFixed(2)}k`, 14, 54);
   p.pop();
 }
 
@@ -652,10 +715,10 @@ function drawRatioMode(p, pointA, pointB, aS, bS, origin, ratio, colors) {
   p.textFont("'JetBrains Mono', monospace");
   p.textSize(16);
   p.textAlign(p.LEFT, p.TOP);
-  p.text(`P = ${P.x.toFixed(2)}i + ${P.y.toFixed(2)}j + ${P.z.toFixed(2)}k`, 14, 14);
+  fitText(p, `P = ${P.x.toFixed(2)}i + ${P.y.toFixed(2)}j + ${P.z.toFixed(2)}k`, 14, 14);
   p.fill(colors.dim);
   p.textSize(13);
-  p.text(`AP : PB = ${ratio.lambda} : ${ratio.mu}`, 14, 38);
+  fitText(p, `AP : PB = ${ratio.lambda} : ${ratio.mu}`, 14, 38);
   p.pop();
 }
 
@@ -687,16 +750,33 @@ function drawCollinearMode(p, pointA, pointB, pointC, aS, bS, cS, colors) {
   p.textFont("'JetBrains Mono', monospace");
   p.textSize(16);
   p.textAlign(p.LEFT, p.TOP);
-  p.text(
+  fitText(
+    p,
     rel === "degenerate" ? "two points coincide" : collinear ? "A, B, C are collinear" : "A, B, C are not collinear",
     14,
     14
   );
   p.fill(colors.dim);
   p.textSize(13);
-  p.text(`AB = ${AB.x.toFixed(2)}i + ${AB.y.toFixed(2)}j + ${AB.z.toFixed(2)}k`, 14, 38);
-  p.text(`BC = ${BC.x.toFixed(2)}i + ${BC.y.toFixed(2)}j + ${BC.z.toFixed(2)}k`, 14, 56);
+  fitText(p, `AB = ${AB.x.toFixed(2)}i + ${AB.y.toFixed(2)}j + ${AB.z.toFixed(2)}k`, 14, 38);
+  fitText(p, `BC = ${BC.x.toFixed(2)}i + ${BC.y.toFixed(2)}j + ${BC.z.toFixed(2)}k`, 14, 56);
   p.pop();
+}
+
+// Overlay readouts are drawn at a fixed size; on a narrow (phone) canvas a
+// long one like "a + b + c + d = …" would run off the right edge, so shrink
+// the font just enough for that line to fit.
+function fitText(p, str, x, y) {
+  const maxW = p.width - x * 2;
+  const w = p.textWidth(str);
+  if (w <= maxW) {
+    p.text(str, x, y);
+    return;
+  }
+  const size = p.textSize();
+  p.textSize(size * (maxW / w));
+  p.text(str, x, y);
+  p.textSize(size);
 }
 
 function drawDashedLine(p, from, to, colorHex, dash = 6) {

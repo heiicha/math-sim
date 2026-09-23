@@ -144,6 +144,7 @@ function drawHover(p, hoverX, origin, unit, colors, fn) {
 
 export default function GraphCanvas({ baseFn, transformedFn, showOriginal = true }) {
   const containerRef = useRef(null);
+  const resetViewRef = useRef(() => {});
   const stateRef = useRef({ baseFn, transformedFn, showOriginal });
   stateRef.current = { baseFn, transformedFn, showOriginal };
 
@@ -156,6 +157,14 @@ export default function GraphCanvas({ baseFn, transformedFn, showOriginal = true
     let hoverX = null;
     let colors = readColors();
     let p5Instance;
+    let pinch = null;
+
+    const resetView = () => {
+      pan.x = 0;
+      pan.y = 0;
+      unit = 42;
+    };
+    resetViewRef.current = resetView;
 
     const sketch = (p) => {
       const getOrigin = () => ({ x: p.width / 2 + pan.x, y: p.height / 2 + pan.y });
@@ -181,8 +190,11 @@ export default function GraphCanvas({ baseFn, transformedFn, showOriginal = true
         if (hoverX !== null) drawHover(p, hoverX, origin, unit, colors, transformedFn);
       };
 
-      p.mousePressed = () => {
+      p.mousePressed = (evt) => {
         if (p.mouseX < 0 || p.mouseX > p.width || p.mouseY < 0 || p.mouseY > p.height) return;
+        // on touch, one finger scrolls the page; panning/zooming is two
+        // fingers, handled by the touch listeners below
+        if (evt?.pointerType === "touch") return;
         panning = true;
         panStart = { x: p.mouseX, y: p.mouseY, panX: pan.x, panY: pan.y };
       };
@@ -215,14 +227,52 @@ export default function GraphCanvas({ baseFn, transformedFn, showOriginal = true
         return false;
       };
 
-      p.doubleClicked = () => {
-        pan.x = 0;
-        pan.y = 0;
-        unit = 42;
-      };
+      p.doubleClicked = resetView;
     };
 
     p5Instance = new p5(sketch, container);
+
+    // Two-finger gestures: pinch to zoom, drag to pan. The world point that
+    // was under the fingers' midpoint when the gesture started stays under
+    // the midpoint as it moves, so the zoom feels anchored to the fingers.
+    const midpointAndSpread = (touches) => {
+      const rect = container.getBoundingClientRect();
+      const [a, b] = [touches[0], touches[1]];
+      return {
+        x: (a.clientX + b.clientX) / 2 - rect.left,
+        y: (a.clientY + b.clientY) / 2 - rect.top,
+        spread: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY),
+      };
+    };
+    const onTouchStart = (e) => {
+      if (e.touches.length !== 2) return;
+      e.preventDefault();
+      const m = midpointAndSpread(e.touches);
+      const ox = p5Instance.width / 2 + pan.x;
+      const oy = p5Instance.height / 2 + pan.y;
+      pinch = {
+        spread: Math.max(m.spread, 1),
+        unit,
+        worldX: (m.x - ox) / unit,
+        worldY: (m.y - oy) / unit,
+      };
+      hoverX = null;
+    };
+    const onTouchMove = (e) => {
+      if (!pinch || e.touches.length !== 2) return;
+      e.preventDefault();
+      const m = midpointAndSpread(e.touches);
+      unit = Math.min(160, Math.max(10, pinch.unit * (m.spread / pinch.spread)));
+      pan.x = m.x - pinch.worldX * unit - p5Instance.width / 2;
+      pan.y = m.y - pinch.worldY * unit - p5Instance.height / 2;
+    };
+    const onTouchEnd = (e) => {
+      if (e.touches.length < 2) pinch = null;
+    };
+    container.addEventListener("touchstart", onTouchStart, { passive: false });
+    container.addEventListener("touchmove", onTouchMove, { passive: false });
+    container.addEventListener("touchend", onTouchEnd);
+    container.addEventListener("touchcancel", onTouchEnd);
 
     const resizeObserver = new ResizeObserver(() => {
       if (!p5Instance) return;
@@ -233,11 +283,22 @@ export default function GraphCanvas({ baseFn, transformedFn, showOriginal = true
     resizeObserver.observe(container);
 
     return () => {
+      container.removeEventListener("touchstart", onTouchStart);
+      container.removeEventListener("touchmove", onTouchMove);
+      container.removeEventListener("touchend", onTouchEnd);
+      container.removeEventListener("touchcancel", onTouchEnd);
       resizeObserver.disconnect();
       p5Instance.remove();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <div className="graph-canvas" ref={containerRef} />;
+  return (
+    <div className="canvas-wrap">
+      <div className="graph-canvas" ref={containerRef} />
+      <button type="button" className="canvas-reset" onClick={() => resetViewRef.current()}>
+        Reset view
+      </button>
+    </div>
+  );
 }

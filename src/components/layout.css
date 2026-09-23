@@ -223,3 +223,70 @@
   -webkit-appearance: none;
   margin: 0;
 }
+
+/* Small "Reset view" button pinned to the bottom-right of a 2D canvas (the
+   top-left holds each mode's readout text, which can run the full width) —
+   the touch-friendly alternative to double-clicking to recentre. */
+.canvas-wrap {
+  position: relative;
+}
+
+.canvas-reset {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  padding: 5px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.2;
+  color: var(--text-dim);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.canvas-reset:hover {
+  color: var(--text);
+  opacity: 1;
+}
+
+/* Phones: reclaim horizontal space for the canvas, and reorder so the
+   student sees mode tabs → canvas → inputs → results without scrolling
+   past every input just to switch modes or reach the picture. */
+@media (max-width: 640px) {
+  .app-shell {
+    padding: 28px 14px 96px;
+  }
+
+  .app-header {
+    margin-bottom: 24px;
+  }
+
+  .layout,
+  .main-row {
+    gap: 16px;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+
+  .canvas-panel {
+    padding: 8px;
+    min-width: 0;
+    width: 100%;
+    order: -1;
+  }
+
+  .mode-bar {
+    order: -1;
+    gap: 4px;
+  }
+
+  .mode-bar .mode-tab {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+  }
+}

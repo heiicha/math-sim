@@ -83,8 +83,8 @@ function Transformations() {
               Type an equation in terms of x, then adjust the transformation. The original y ={" "}
               <span style={{ color: "var(--vec-a)", fontWeight: 600 }}>f(x)</span> is shown faint and
               dashed; the transformed curve is{" "}
-              <span style={{ color: "var(--result)", fontWeight: 600 }}>solid</span>. Drag to pan, scroll
-              to zoom, double-click to reset the view.
+              <span style={{ color: "var(--result)", fontWeight: 600 }}>solid</span>. Drag to pan and scroll
+              to zoom (on a touch screen, drag with two fingers and pinch). Reset view recentres the graph.
             </HintPopup>
           </section>
         </div>

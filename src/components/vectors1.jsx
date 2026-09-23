@@ -111,7 +111,7 @@ function Vectors1() {
               ratio={ratio}
             />
             <HintPopup storageKey="vectors1-hint-dismissed">
-              Input coordinates below or drag the arrows/circles. All vectors here are position vectors. (i.e <b>a</b> = OA)
+              Input coordinates below or drag the arrows/circles. All vectors here are position vectors. (i.e <b>a</b> = OA) On a touch screen, move the view with two fingers.
             </HintPopup>
           </section>
         </div>
