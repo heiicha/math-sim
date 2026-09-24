@@ -9,13 +9,16 @@
 }
 
 .counting-task-label {
-  flex: 1 1 auto;
+  /* flex-basis 0 (not auto) so this can't inherit .stat-input's width:100%
+     as its basis — sizing comes purely from flex-grow against the row. */
+  flex: 1 1 0%;
   min-width: 0;
 }
 
 .counting-task-ways {
-  width: 64px;
-  flex: none;
+  /* Same reasoning: pin flex-basis to the exact width so it can't end up
+     with a 100% basis via .stat-input and then refuse to shrink from it. */
+  flex: 0 0 64px;
   text-align: center;
   -moz-appearance: textfield;
 }
