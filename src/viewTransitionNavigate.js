@@ -11,7 +11,13 @@ export function navigateWithTransition(navigate, to) {
     navigate(to);
     return;
   }
-  document.startViewTransition(() => {
+  const transition = document.startViewTransition(() => {
     flushSync(() => navigate(to));
   });
+  // .ready rejects whenever the browser skips the transition itself (tab
+  // backgrounded mid-click, a second navigation preempting this one, etc.)
+  // — the navigation already went through via flushSync above either way,
+  // so this is just the browser declining to animate it. Swallow it rather
+  // than let it surface as an unhandled rejection.
+  transition.ready.catch(() => {});
 }

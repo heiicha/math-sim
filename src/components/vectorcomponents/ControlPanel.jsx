@@ -1,4 +1,5 @@
 import NumberLineInput from "./NumberLineInput";
+import NumberField from "../statscomponents/NumberField";
 import "./ControlPanel.css";
 
 // The number boxes edit the vector's *components* (head - tail), not raw
@@ -34,10 +35,9 @@ function ColumnVectorInput({ label, color, vector, onChange }) {
         <div className="bracket-values">
           {["x", "y", "z"].map((key) => (
             <div className="axis-row" key={key}>
-              <input
-                type="number"
+              <NumberField
                 value={comp[key]}
-                onChange={(e) => update(key, parseFloat(e.target.value))}
+                onChange={(v) => update(key, v)}
                 step="0.5"
                 aria-label={`${label} ${key} component`}
               />
@@ -120,17 +120,14 @@ function CrossShapeToggle({ crossShape, setCrossShape }) {
 }
 
 function RatioInputs({ ratio, setRatio }) {
-  const update = (key) => (e) => {
-    const value = parseFloat(e.target.value);
-    setRatio({ ...ratio, [key]: Number.isNaN(value) ? 0 : value });
-  };
+  const update = (key) => (v) => setRatio({ ...ratio, [key]: v });
   return (
     <div className="ratio-inputs">
       <p className="ratio-label">AP : PB</p>
       <div className="ratio-fields">
-        <input type="number" value={ratio.lambda} onChange={update("lambda")} step="1" aria-label="λ" />
+        <NumberField value={ratio.lambda} onChange={update("lambda")} step="1" aria-label="λ" />
         <span>:</span>
-        <input type="number" value={ratio.mu} onChange={update("mu")} step="1" aria-label="μ" />
+        <NumberField value={ratio.mu} onChange={update("mu")} step="1" aria-label="μ" />
       </div>
       <p className="ratio-hint">
         P divides segment AB (from a's and b's heads) so that AP : PB = λ : μ.

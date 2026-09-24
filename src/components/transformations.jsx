@@ -79,7 +79,7 @@ function Transformations() {
 
           <section className="canvas-panel">
             <GraphCanvas baseFn={baseFn} transformedFn={transformedFn} showOriginal />
-            <HintPopup storageKey="transformations-hint-dismissed">
+            <HintPopup>
               Type an equation in terms of x, then adjust the transformation. The original y ={" "}
               <span style={{ color: "var(--vec-a)", fontWeight: 600 }}>f(x)</span> is shown faint and
               dashed; the transformed curve is{" "}

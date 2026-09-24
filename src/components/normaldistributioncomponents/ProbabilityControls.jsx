@@ -1,4 +1,5 @@
 import SegmentedControl from "../statscomponents/SegmentedControl";
+import NumberField from "../statscomponents/NumberField";
 import { fmt } from "../../utils/statsMath";
 
 // Reused as-is on the "Normal Probabilities" tab, and again (compactly) on
@@ -21,25 +22,13 @@ export default function ProbabilityControls({ mode, setMode, lower, setLower, up
       {mode !== "lower" && (
         <div className="stat-field">
           <span className="stat-field-label">Lower bound, a</span>
-          <input
-            type="number"
-            className="stat-input"
-            value={lower}
-            step="0.5"
-            onChange={(e) => setLower(parseFloat(e.target.value))}
-          />
+          <NumberField className="stat-input" value={lower} step="0.5" onChange={setLower} />
         </div>
       )}
       {mode !== "upper" && (
         <div className="stat-field">
           <span className="stat-field-label">Upper bound, b</span>
-          <input
-            type="number"
-            className="stat-input"
-            value={upper}
-            step="0.5"
-            onChange={(e) => setUpper(parseFloat(e.target.value))}
-          />
+          <NumberField className="stat-input" value={upper} step="0.5" onChange={setUpper} />
         </div>
       )}
     </div>

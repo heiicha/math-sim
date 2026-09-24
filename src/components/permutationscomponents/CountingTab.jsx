@@ -1,4 +1,5 @@
 import SegmentedControl from "../statscomponents/SegmentedControl";
+import NumberField from "../statscomponents/NumberField";
 
 const MAX_TASKS = 6;
 const MIN_TASKS = 2;
@@ -53,13 +54,12 @@ export function CountingControls({ state, setState }) {
               onChange={(e) => patchTask(task.id, { label: e.target.value })}
               aria-label={`Task ${i + 1} name`}
             />
-            <input
-              type="number"
+            <NumberField
               className="stat-input counting-task-ways"
               min="1"
               max="20"
               value={task.ways}
-              onChange={(e) => patchTask(task.id, { ways: Math.max(1, parseInt(e.target.value, 10) || 1) })}
+              onChange={(v) => patchTask(task.id, { ways: Math.max(1, Math.min(20, Math.round(v))) })}
               aria-label={`Task ${i + 1} number of ways`}
             />
             {tasks.length > MIN_TASKS && (

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import NumberLineInput from "../vectorcomponents/NumberLineInput";
+import NumberField from "../statscomponents/NumberField";
 import { subtract, normalize } from "./geometry3D.js";
 import { crossProduct } from "../vectorcomponents/vectorMath.js";
 import "../vectorcomponents/ControlPanel.css";
@@ -19,10 +20,9 @@ function ColumnInput({ label, color, vector, onChange }) {
         <div className="bracket-values">
           {["x", "y", "z"].map((key) => (
             <div className="axis-row" key={key}>
-              <input
-                type="number"
+              <NumberField
                 value={vector[key] || 0}
-                onChange={(e) => update(key, parseFloat(e.target.value))}
+                onChange={(v) => update(key, v)}
                 step="0.5"
                 aria-label={`${label} ${key}`}
               />

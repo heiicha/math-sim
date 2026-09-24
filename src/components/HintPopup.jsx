@@ -1,31 +1,26 @@
 import { useState } from "react";
+import { useHintPreference } from "../hintPreference.jsx";
 import "./HintPopup.css";
 
-// Persists dismissal per page (storageKey) so once a student closes the
-// instructions, they stay closed on future visits too.
-export default function HintPopup({ storageKey, children }) {
-  const [dismissed, setDismissed] = useState(() => {
-    try {
-      return localStorage.getItem(storageKey) === "1";
-    } catch {
-      return false;
-    }
-  });
+// Each Hint section can be collapsed/expanded on its own page — that toggle
+// is just local component state. Whether a hint *starts* collapsed or
+// expanded is governed by the app-wide preference (set via the in-app Hints
+// toggle and persisted in cookies), read once at mount.
+export default function HintPopup({ children }) {
+  const { collapsedByDefault } = useHintPreference();
+  const [open, setOpen] = useState(() => !collapsedByDefault);
 
-  if (dismissed) return null;
-
-  const dismiss = () => {
-    setDismissed(true);
-    try {
-      localStorage.setItem(storageKey, "1");
-    } catch {
-      // private browsing / storage disabled — dismissal just won't persist
-    }
-  };
+  if (!open) {
+    return (
+      <button type="button" className="hint-popup-tab" onClick={() => setOpen(true)} aria-label="Show instructions">
+        ? Hint
+      </button>
+    );
+  }
 
   return (
     <div className="hint-popup" role="note">
-      <button className="hint-popup-close" onClick={dismiss} aria-label="Dismiss instructions">
+      <button className="hint-popup-close" onClick={() => setOpen(false)} aria-label="Collapse instructions">
         ×
       </button>
       <div className="hint-popup-body">{children}</div>

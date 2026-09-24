@@ -29,6 +29,21 @@ function fmtTick(n) {
   return Number.isInteger(r) ? String(r) : r.toFixed(2);
 }
 
+// Shade/marker colors are sometimes passed in as CSS custom-property
+// references (e.g. "var(--result)") rather than resolved values. p5's color
+// parser doesn't understand var() — p.color() throws on it, which kills the
+// sketch's draw loop for good — so resolve those to their computed value
+// before they ever reach a p5 color call.
+function resolveColor(value, fallback) {
+  if (!value) return fallback;
+  if (typeof value === "string" && value.startsWith("var(")) {
+    const name = value.slice(4, -1).trim();
+    const resolved = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return resolved || fallback;
+  }
+  return value;
+}
+
 export default function BellCurveCanvas({
   primary,
   secondary = null,
@@ -106,7 +121,7 @@ export default function BellCurveCanvas({
           if (to <= from) continue;
           p.push();
           p.noStroke();
-          const fillColor = p.color(region.color || colors.accent);
+          const fillColor = p.color(resolveColor(region.color, colors.accent));
           fillColor.setAlpha(region.alpha ?? 110);
           p.fill(fillColor);
           p.beginShape();
@@ -153,7 +168,7 @@ export default function BellCurveCanvas({
           const ctx = p.drawingContext;
           ctx.save();
           ctx.setLineDash(marker.dashed === false ? [] : [4, 3]);
-          p.stroke(marker.color || colors.text);
+          p.stroke(resolveColor(marker.color, colors.text));
           p.strokeWeight(1.4);
           p.line(px, padTop, px, h - padBottom);
           ctx.restore();
@@ -162,7 +177,7 @@ export default function BellCurveCanvas({
           if (marker.label) {
             p.push();
             p.noStroke();
-            p.fill(marker.color || colors.text);
+            p.fill(resolveColor(marker.color, colors.text));
             p.textFont("'JetBrains Mono', monospace");
             p.textSize(11);
             p.textAlign(px > w - 60 ? p.RIGHT : px < 60 ? p.LEFT : p.CENTER, p.BOTTOM);

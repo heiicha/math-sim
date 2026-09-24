@@ -110,7 +110,7 @@ function Vectors1() {
               crossShape={crossShape}
               ratio={ratio}
             />
-            <HintPopup storageKey="vectors1-hint-dismissed">
+            <HintPopup>
               Input coordinates below or drag the arrows/circles. All vectors here are position vectors. (i.e <b>a</b> = OA) On a touch screen, move the view with two fingers.
             </HintPopup>
           </section>

@@ -18,7 +18,7 @@ export default function CanvasPanel({ mode, countingState, permState, circularSt
       {mode === "permutations" && <PermutationsVisual state={permState} />}
       {mode === "circular" && <CircularVisual state={circularState} />}
       {mode === "combinations" && <CombinationsVisual state={combState} />}
-      <HintPopup storageKey="permutations-hint-dismissed">{HINTS[mode]}</HintPopup>
+      <HintPopup>{HINTS[mode]}</HintPopup>
     </section>
   );
 }

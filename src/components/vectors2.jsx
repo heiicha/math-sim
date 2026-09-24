@@ -173,7 +173,7 @@ function Vectors2() {
               pointLineView={pointLineView}
               pointPlaneView={pointPlaneView}
             />
-            <HintPopup storageKey="vectors2-hint-dismissed">
+            <HintPopup>
               Drag empty space to orbit, scroll to zoom, or drag a point/arrow tip to edit it directly.
               z is drawn as height here; edit x, y, z below —
               entity 1 is always {" "}

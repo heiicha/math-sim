@@ -141,7 +141,7 @@ export default function NormalDistribution() {
                 </span>
               )}
             </div>
-            <HintPopup storageKey="normaldist-hint-dismissed">
+            <HintPopup>
               Drag the sliders to change the distribution's parameters. The shaded region always
               shows the probability being computed on the current tab.
             </HintPopup>

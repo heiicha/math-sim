@@ -1,3 +1,5 @@
+import NumberField from "../statscomponents/NumberField";
+
 // Renders the note-formatted sentence for a single transform step, with the
 // blanks as inline dropdowns/number inputs. Shared by the single-transform
 // tabs (Translate/Scale/Reflect) and the Sandbox's per-step cards.
@@ -27,13 +29,12 @@ export default function StepControls({ step, onChange, subjectLabel = "y = f(x)"
           <option value="y">y</option>
         </select>
         -direction by{" "}
-        <input
-          type="number"
+        <NumberField
           className="step-number"
           value={step.units}
           min="0"
           step="0.5"
-          onChange={(e) => patch({ units: Math.max(0, parseFloat(e.target.value) || 0) })}
+          onChange={(v) => patch({ units: Math.max(0, v) })}
           aria-label="units"
         />{" "}
         units.
@@ -55,13 +56,12 @@ export default function StepControls({ step, onChange, subjectLabel = "y = f(x)"
           <option value="y">y-axis</option>
         </select>{" "}
         by a factor of{" "}
-        <input
-          type="number"
+        <NumberField
           className="step-number"
           value={step.factor}
           min="0.1"
           step="0.1"
-          onChange={(e) => patch({ factor: Math.max(0.1, parseFloat(e.target.value) || 0.1) })}
+          onChange={(v) => patch({ factor: Math.max(0.1, v) })}
           aria-label="scale factor"
         />
         .

@@ -18,7 +18,7 @@ function FormulateView({ values }) {
         This is a {values.tail === "two" ? "two-tailed" : "one-tailed"} test — H₁ looks for{" "}
         {tailInfo.hint} in the population mean away from the claimed value.
       </p>
-      <HintPopup storageKey="hyptest-formulate-hint-dismissed">
+      <HintPopup>
         H₀ always states an <em>equality</em>. H₁'s direction depends only on what the researcher
         suspects has changed — pick the tail that matches the question's wording ("has decreased",
         "has increased", "has changed / is no longer").
@@ -70,7 +70,7 @@ function RunView({ values, test }) {
           tab).
         </p>
       )}
-      <HintPopup storageKey="hyptest-run-hint-dismissed">
+      <HintPopup>
         The red region is the critical region for the chosen α and tail; the blue region is the
         p-value region bounded by the test statistic z. Reject H₀ exactly when z falls in the red
         region — equivalently, whenever the p-value ≤ α.

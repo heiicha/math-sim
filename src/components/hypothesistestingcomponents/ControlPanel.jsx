@@ -1,5 +1,6 @@
 import SliderField from "../statscomponents/SliderField";
 import SegmentedControl from "../statscomponents/SegmentedControl";
+import NumberField from "../statscomponents/NumberField";
 import { TAIL_OPTIONS } from "./hypothesisMath";
 
 const ALPHA_OPTIONS = [
@@ -16,13 +17,7 @@ function FormulateControls({ values, setters }) {
         <label className="stat-field-label" htmlFor="mu0-input">
           Claimed / hypothesised mean, μ₀
         </label>
-        <input
-          id="mu0-input"
-          className="stat-input"
-          type="number"
-          value={values.mu0}
-          onChange={(e) => setters.setMu0(parseFloat(e.target.value))}
-        />
+        <NumberField id="mu0-input" className="stat-input" value={values.mu0} onChange={setters.setMu0} />
       </div>
 
       <SegmentedControl
@@ -44,14 +39,7 @@ function RunControls({ values, setters }) {
           <label className="stat-field-label" htmlFor="xbar-input">
             Sample mean, x̄
           </label>
-          <input
-            id="xbar-input"
-            className="stat-input"
-            type="number"
-            step="0.1"
-            value={values.xbar}
-            onChange={(e) => setters.setXbar(parseFloat(e.target.value))}
-          />
+          <NumberField id="xbar-input" className="stat-input" step="0.1" value={values.xbar} onChange={setters.setXbar} />
         </div>
 
         <SliderField
@@ -87,18 +75,13 @@ function RunControls({ values, setters }) {
           <label className="stat-field-label" htmlFor="sd-input">
             {values.varianceKnown ? "Population standard deviation, σ" : "Sample standard deviation, s (unbiased estimate)"}
           </label>
-          <input
+          <NumberField
             id="sd-input"
             className="stat-input"
-            type="number"
             step="0.1"
             min="0.0001"
             value={values.varianceKnown ? values.sigma : values.s}
-            onChange={(e) =>
-              values.varianceKnown
-                ? setters.setSigma(parseFloat(e.target.value))
-                : setters.setS(parseFloat(e.target.value))
-            }
+            onChange={values.varianceKnown ? setters.setSigma : setters.setS}
           />
         </div>
       </div>

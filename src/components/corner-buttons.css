@@ -17,3 +17,9 @@
   right: 20px;
   bottom: auto;
 }
+
+.corner-button-top-left {
+  top: 20px;
+  left: 20px;
+  bottom: auto;
+}

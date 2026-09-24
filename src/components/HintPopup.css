@@ -37,3 +37,23 @@
   background: var(--line);
   color: var(--text);
 }
+
+.hint-popup-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 6px 14px;
+  background: var(--panel-raised);
+  border: 1px solid var(--margin-rule);
+  border-radius: 999px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.hint-popup-tab:hover {
+  background: var(--line);
+  color: var(--text);
+}

@@ -10,6 +10,7 @@ import HypothesisTesting from "./components/hypothesistesting";
 import FeedbackButton from "./components/feedback";
 import HomeButton from "./components/HomeButton";
 import ThemeToggle from "./components/ThemeToggle";
+import HintToggle from "./components/HintToggle";
 import "./components/corner-buttons.css";
 
 export default function App() {
@@ -34,6 +35,9 @@ export default function App() {
       </div>
       <div className="corner-button corner-button-top-right">
         <ThemeToggle />
+      </div>
+      <div className="corner-button corner-button-top-left">
+        <HintToggle />
       </div>
     </>
   );
